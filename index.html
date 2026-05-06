@@ -386,7 +386,7 @@ const CLIENT_ID  = "4609d39a-8dac-42cf-97d5-090205ed31ef";
 const TENANT_ID  = "5babe523-55fa-4879-9d41-86554291326e";
 const SCOPES     = ["User.Read","Files.ReadWrite"];
 const FILE_NAME  = "onyiego_expenses.json";
-const FOLDER     = "Onyiego Expense Tracker";
+const FOLDER     = "050 Accounts & Finance/Onyiego";
 
 // ── MSAL (Microsoft Auth) ─────────────────────────────────────────
 const msalConfig = {
@@ -491,13 +491,34 @@ async function gFetch(url,opts={}){
 }
 
 async function ensureFolder(){
+  // Try existing nested folder first
   try{
-    const r=await gFetch(`/me/drive/root:/${FOLDER}`);
+    const r=await gFetch(`/me/drive/root:/${encodeURI(FOLDER)}`);
     return r.id;
-  }catch{
-    const r=await gFetch('/me/drive/root/children',{method:'POST',body:JSON.stringify({name:FOLDER,folder:{},['@microsoft.graph.conflictBehavior']:'rename'})});
-    return r.id;
+  }catch{}
+  // Walk path and create any missing pieces
+  const parts = FOLDER.split('/');
+  let parentPath = '';
+  let parentId = null;
+  for(const part of parts){
+    const fullPath = parentPath ? parentPath+'/'+part : part;
+    try{
+      const r=await gFetch(`/me/drive/root:/${encodeURI(fullPath)}`);
+      parentId = r.id;
+    }catch{
+      // Create this segment
+      const url = parentPath
+        ? `/me/drive/root:/${encodeURI(parentPath)}:/children`
+        : '/me/drive/root/children';
+      const r = await gFetch(url, {
+        method:'POST',
+        body: JSON.stringify({name:part, folder:{}, ['@microsoft.graph.conflictBehavior']:'rename'})
+      });
+      parentId = r.id;
+    }
+    parentPath = fullPath;
   }
+  return parentId;
 }
 
 async function loadData(){
@@ -533,7 +554,7 @@ async function saveData(notify=true){
         method:'PUT',headers:{Authorization:`Bearer ${await getToken()}`,'Content-Type':'application/json'},body
       });
     }else{
-      const r=await fetch(`${GRAPH}/me/drive/items/${folderId}:/${FILE_NAME}:/content`,{
+      const r=await fetch(`${GRAPH}/me/drive/items/${folderId}:/${encodeURIComponent(FILE_NAME)}:/content`,{
         method:'PUT',headers:{Authorization:`Bearer ${await getToken()}`,'Content-Type':'application/json'},body
       });
       const j=await r.json(); driveFileId=j.id;
