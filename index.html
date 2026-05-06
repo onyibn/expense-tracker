@@ -413,21 +413,23 @@ async function initMSAL(){
   await loadMSAL();
   msalInstance = new msal.PublicClientApplication(msalConfig);
   await msalInstance.initialize();
-  // Handle redirect
   try{
-    const resp = await msalInstance.handleRedirectPromise();
-    if(resp){account=resp.account; await onSignedIn();}
-    else{
-      const accounts=msalInstance.getAllAccounts();
-      if(accounts.length>0){account=accounts[0]; await onSignedIn();}
-    }
+    const accounts=msalInstance.getAllAccounts();
+    if(accounts.length>0){account=accounts[0]; await onSignedIn();}
   }catch(e){console.error(e);}
 }
 
 async function signIn(){
   await loadMSAL();
   if(!msalInstance) await initMSAL();
-  msalInstance.loginRedirect({scopes:SCOPES});
+  try {
+    const resp = await msalInstance.loginPopup({scopes:SCOPES});
+    account = resp.account;
+    await onSignedIn();
+  } catch(e) {
+    console.error("Login error:", e);
+    showToast("Sign in failed — please allow popups for this site", "error");
+  }
 }
 
 function signOut(){
@@ -439,8 +441,8 @@ async function getToken(){
     const r=await msalInstance.acquireTokenSilent({scopes:SCOPES,account});
     return r.accessToken;
   }catch{
-    const r=await msalInstance.acquireTokenRedirect({scopes:SCOPES});
-    return r?.accessToken;
+    const r=await msalInstance.acquireTokenPopup({scopes:SCOPES});
+    return r.accessToken;
   }
 }
 
