@@ -399,13 +399,28 @@ let expenses = []; // [{id,date,category,description,amount}]
 let driveFileId = null;
 let charts = {};
 
-// Lazy-load MSAL
+// Lazy-load MSAL with multiple CDN fallbacks
 function loadMSAL(){
-  return new Promise(res=>{
-    if(window.msal){res();return;}
-    const s=document.createElement('script');
-    s.src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-authentication-library-for-js/2.38.1/msal-browser.min.js";
-    s.onload=res; document.head.appendChild(s);
+  return new Promise((resolve, reject)=>{
+    if(window.msal){resolve();return;}
+    const cdns = [
+      "https://alcdn.msauth.net/browser/2.38.1/js/msal-browser.min.js",
+      "https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.1/lib/msal-browser.min.js",
+      "https://unpkg.com/@azure/msal-browser@2.38.1/lib/msal-browser.min.js"
+    ];
+    let i = 0;
+    function tryNext(){
+      if(i >= cdns.length){
+        reject(new Error("All CDNs failed"));
+        return;
+      }
+      const s = document.createElement('script');
+      s.src = cdns[i++];
+      s.onload = ()=>resolve();
+      s.onerror = ()=>{console.warn("CDN failed, trying next:", s.src); tryNext();};
+      document.head.appendChild(s);
+    }
+    tryNext();
   });
 }
 
@@ -420,7 +435,13 @@ async function initMSAL(){
 }
 
 async function signIn(){
-  await loadMSAL();
+  try{
+    await loadMSAL();
+  }catch(e){
+    showToast("Could not load Microsoft auth library. Check your internet connection.","error");
+    console.error(e);
+    return;
+  }
   if(!msalInstance) await initMSAL();
   try {
     const resp = await msalInstance.loginPopup({scopes:SCOPES});
@@ -428,7 +449,7 @@ async function signIn(){
     await onSignedIn();
   } catch(e) {
     console.error("Login error:", e);
-    showToast("Sign in failed — please allow popups for this site", "error");
+    showToast("Sign in failed — " + (e.message||"please allow popups"), "error");
   }
 }
 
