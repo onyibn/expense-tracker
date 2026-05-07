@@ -64,6 +64,18 @@ body.dark nav{background:#070810;border-bottom:1px solid var(--border)}
 .btn-discard{background:transparent;color:var(--danger);border:1px solid var(--danger);padding:9px 16px;border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer}
 .btn-discard:hover{background:var(--danger);color:#fff}
 .draft-suggest{font-size:11px;color:var(--info);margin-top:2px}
+.draft-photo{width:120px;height:120px;border-radius:10px;background:var(--surface);border:1px solid var(--border);overflow:hidden;cursor:pointer;flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--ink-muted)}
+.draft-photo img{width:100%;height:100%;object-fit:cover}
+.draft-photo-loading{position:absolute;inset:0;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--ink-muted)}
+.history-photo-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:2px 4px;color:var(--info)}
+.history-photo-btn:hover{transform:scale(1.2)}
+.history-source-btn{background:none;border:none;cursor:pointer;font-size:13px;padding:2px 4px;color:var(--ink-muted)}
+.history-source-btn:hover{color:var(--ink)}
+.img-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.img-modal-bg.show{display:flex}
+.img-modal-bg img{max-width:100%;max-height:90vh;border-radius:8px;box-shadow:0 0 40px rgba(0,0,0,.5)}
+.img-modal-close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,.15);color:#fff;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:20px}
+.source-row{background:var(--surface);font-family:monospace;font-size:11px;color:var(--ink-soft);padding:10px 14px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
 .page{display:none;padding:28px;max-width:1100px;margin:0 auto}
 .page.active{display:block}
 #authGate{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 60px);text-align:center;padding:40px}
@@ -302,7 +314,9 @@ body.dark #toast{border:1px solid var(--border)}
       <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
         <button class="btn-primary" onclick="parseAndAddDraft()">Parse Message</button>
         <button class="btn-secondary" onclick="document.getElementById('draftPasteBox').value=''">Clear</button>
-        <div style="flex:1;text-align:right;font-size:12px;color:var(--ink-muted);align-self:center" id="parseHint">Tip: paste one message at a time</div>
+        <button class="btn-secondary" onclick="document.getElementById('photoInput').click()">📷 Attach Photo</button>
+        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoUpload(event)"/>
+        <div style="flex:1;text-align:right;font-size:12px;color:var(--ink-muted);align-self:center" id="parseHint">Tip: paste one message at a time, or attach a receipt photo</div>
       </div>
     </div>
 
@@ -403,6 +417,10 @@ body.dark #toast{border:1px solid var(--border)}
   </div>
 </div>
 
+<div id="imgModal" class="img-modal-bg" onclick="if(event.target===this)closeImgModal()">
+  <button class="img-modal-close" onclick="closeImgModal()">×</button>
+  <img id="imgModalImg" src="" alt="Receipt"/>
+</div>
 <div id="toast"></div>
 
 <script>
@@ -411,6 +429,7 @@ const TENANT_ID="5babe523-55fa-4879-9d41-86554291326e";
 const SCOPES=["User.Read","Files.ReadWrite"];
 const FILE_NAME="onyiego_expenses.json";
 const FOLDER="050 Accounts & Finance/Onyiego";
+const RECEIPTS_FOLDER="050 Accounts & Finance/Onyiego/receipts";
 const msalConfig={auth:{clientId:CLIENT_ID,authority:`https://login.microsoftonline.com/${TENANT_ID}`,redirectUri:window.location.href.split('?')[0]},cache:{cacheLocation:"localStorage"}};
 
 let msalInstance,account,driveFileId=null,charts={};
@@ -577,7 +596,9 @@ async function loadData(){
         id:e.id,date:e.date,category:e.category,description:e.description||'',
         amount:e.amount,paymentMethod:e.paymentMethod||'',
         txCost:typeof e.txCost==='number'?e.txCost:0,
-        refCode:e.refCode||'',location:e.location||'',type:'expense'
+        refCode:e.refCode||'',location:e.location||'',
+        sourceText:e.sourceText||'',photoId:e.photoId||'',photoName:e.photoName||'',
+        type:'expense'
       }));
       state.income=(json.income||[]).map(i=>({
         id:i.id,date:i.date,category:i.category,description:i.description||'',amount:i.amount,type:'income'
@@ -886,8 +907,11 @@ function cancelEdit(){
 
 async function deleteTransaction(id,type){
   if(!confirm("Delete this transaction?"))return;
-  if(type==='expense')state.expenses=state.expenses.filter(e=>e.id!==id);
-  else state.income=state.income.filter(i=>i.id!==id);
+  if(type==='expense'){
+    const e=state.expenses.find(x=>x.id===id);
+    if(e&&e.photoId)await deletePhoto(e.photoId);
+    state.expenses=state.expenses.filter(e=>e.id!==id);
+  }else state.income=state.income.filter(i=>i.id!==id);
   await saveData(true);refreshAll();
 }
 
@@ -1080,7 +1104,7 @@ function renderHistory(){
       if(e.location)meta.push(`<span style="color:var(--ink-muted);font-size:11px">📍 ${escapeHtml(e.location)}</span>`);
       if(meta.length)descCell=(e.description?escapeHtml(e.description)+'<br>':'')+meta.join(' &nbsp;·&nbsp; ');
     }
-    return `<tr>
+    return `<tr data-row-id="${e.id}">
       <td>${fmtDate(e.date)}</td>
       <td>${new Date(e.date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'short'})}</td>
       <td>${isInc?'<span style="color:var(--info);font-weight:600">+ In</span>':'<span style="color:var(--danger);font-weight:600">− Out</span>'}</td>
@@ -1090,11 +1114,19 @@ function renderHistory(){
       <td class="amount" style="color:${isInc?'var(--accent)':'var(--ink)'}">${isInc?'+':''}${fmt(e.amount)}</td>
       <td class="fee-cell">${isInc?'—':(e.txCost?fmt(e.txCost):'—')}</td>
       <td class="act-btn">
+        ${e.photoId?`<button class="history-photo-btn" onclick="openImgModal('${e.photoId}')" title="View receipt photo">🖼️</button>`:''}
+        ${e.sourceText?`<button class="history-source-btn" onclick="toggleSourceRow('${e.id}')" title="View source SMS">📨</button>`:''}
         <button onclick="${editFn}('${e.id}')" title="Edit">✏️</button>
         <button class="del" onclick="deleteTransaction('${e.id}','${e.type}')" title="Delete">🗑</button>
       </td>
-    </tr>`;
+    </tr>${e.sourceText?`<tr id="src_${e.id}" style="display:none"><td colspan="9" class="source-row">${escapeHtml(e.sourceText)}</td></tr>`:''}`;
   }).join('');
+}
+
+function toggleSourceRow(id){
+  const r=document.getElementById('src_'+id);
+  if(!r)return;
+  r.style.display=r.style.display==='none'?'table-row':'none';
 }
 
 function populateFilterCats(){
@@ -1266,6 +1298,128 @@ function showStatus(msg){const s=document.getElementById('statusBar');document.g
 function hideStatus(){document.getElementById('statusBar').style.display='none';}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 
+// ============== PHOTO RECEIPTS ==============
+const photoUrlCache={};
+
+async function ensureReceiptsFolder(){
+  try{const r=await gFetch(`/me/drive/root:/${encodeURI(RECEIPTS_FOLDER)}`);return r.id;}catch{}
+  const parentId=await ensureFolder();
+  const r=await gFetch(`/me/drive/items/${parentId}/children`,{method:'POST',body:JSON.stringify({name:'receipts',folder:{},['@microsoft.graph.conflictBehavior']:'rename'})});
+  return r.id;
+}
+
+function compressImage(file,maxDim=1600,quality=0.85){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      let {width,height}=img;
+      if(width>maxDim||height>maxDim){const r=Math.min(maxDim/width,maxDim/height);width=Math.round(width*r);height=Math.round(height*r);}
+      const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+      canvas.getContext('2d').drawImage(img,0,0,width,height);
+      canvas.toBlob(b=>b?resolve(b):reject(new Error("compress failed")),'image/jpeg',quality);
+    };
+    img.onerror=()=>reject(new Error("image load failed"));
+    img.src=url;
+  });
+}
+
+async function uploadReceipt(file,baseName){
+  const folderId=await ensureReceiptsFolder();
+  const blob=await compressImage(file);
+  const safeName=baseName.replace(/[^a-zA-Z0-9_\-\.]/g,'_').substring(0,80)+'.jpg';
+  const tok=await getToken();
+  const r=await fetch(`${GRAPH}/me/drive/items/${folderId}:/${encodeURIComponent(safeName)}:/content`,{
+    method:'PUT',
+    headers:{Authorization:`Bearer ${tok}`,'Content-Type':'image/jpeg'},
+    body:blob
+  });
+  if(!r.ok)throw new Error("upload failed: "+r.status);
+  const j=await r.json();
+  return {id:j.id,name:j.name};
+}
+
+async function renamePhoto(photoId,newBaseName){
+  if(!photoId)return null;
+  try{
+    const safeName=newBaseName.replace(/[^a-zA-Z0-9_\-\.]/g,'_').substring(0,80)+'.jpg';
+    const r=await gFetch(`/me/drive/items/${photoId}`,{method:'PATCH',body:JSON.stringify({name:safeName})});
+    return r.name;
+  }catch(e){console.warn("rename failed",e);return null;}
+}
+
+async function deletePhoto(photoId){
+  if(!photoId)return;
+  try{await gFetch(`/me/drive/items/${photoId}`,{method:'DELETE'});}
+  catch(e){console.warn("photo delete failed",e);}
+  delete photoUrlCache[photoId];
+}
+
+async function getPhotoUrl(photoId){
+  if(!photoId)return null;
+  if(photoUrlCache[photoId])return photoUrlCache[photoId];
+  try{
+    const tok=await getToken();
+    const r=await fetch(`${GRAPH}/me/drive/items/${photoId}/content`,{headers:{Authorization:`Bearer ${tok}`}});
+    if(!r.ok)return null;
+    const blob=await r.blob();
+    const url=URL.createObjectURL(blob);
+    photoUrlCache[photoId]=url;
+    return url;
+  }catch(e){console.warn("photo fetch failed",e);return null;}
+}
+
+async function loadPhotoIntoEl(photoId,el){
+  if(!photoId||!el)return;
+  const url=await getPhotoUrl(photoId);
+  if(url)el.innerHTML=`<img src="${url}" alt="Receipt"/>`;
+  else el.innerHTML='<span style="font-size:11px;color:var(--danger)">Failed to load</span>';
+}
+
+async function openImgModal(photoId){
+  const modal=document.getElementById('imgModal');
+  const img=document.getElementById('imgModalImg');
+  img.src='';
+  modal.classList.add('show');
+  const url=await getPhotoUrl(photoId);
+  if(url)img.src=url;
+}
+
+function closeImgModal(){
+  document.getElementById('imgModal').classList.remove('show');
+  document.getElementById('imgModalImg').src='';
+}
+
+async function handlePhotoUpload(ev){
+  const file=ev.target.files[0];
+  if(!file)return;
+  ev.target.value='';
+  if(!file.type.startsWith('image/')){showToast("Please pick an image","error");return;}
+  showStatus("Uploading photo to OneDrive…");
+  try{
+    const stamp=new Date().toISOString().replace(/[:.]/g,'-').substring(0,19);
+    const baseName=`${stamp}_receipt`;
+    const photo=await uploadReceipt(file,baseName);
+    const draft={
+      id:Date.now().toString(),createdAt:new Date().toISOString(),
+      sourceText:'',source:'photo',
+      date:today(),amount:0,paymentMethod:'',refCode:'',location:'',
+      description:'',recipient:'',txCost:0,suggestedCategory:'',
+      photoId:photo.id,photoName:photo.name,
+      confidence:{date:'low',amount:'low',recipient:'low',refCode:'low',paymentMethod:'low'}
+    };
+    state.drafts.unshift(draft);
+    await saveData(false);
+    refreshAll();
+    switchTab('drafts');
+    showToast("Photo saved as draft — fill in the details","success");
+  }catch(e){
+    console.error(e);
+    showToast("Upload failed — check connection","error");
+  }
+  hideStatus();
+}
+
 // ============== SMS PARSER + DRAFTS ==============
 function parseSMS(text){
   const t=(text||'').trim();if(!t)return null;
@@ -1375,15 +1529,18 @@ function renderDrafts(){
   wrap.innerHTML=state.drafts.map(d=>{
     const sourceLabel=({
       'sms-mpesa':'M-PESA SMS','sms-airtel':'AIRTEL SMS','sms-equity':'EQUITY SMS',
-      'sms-kcb':'KCB SMS','sms-coop':'CO-OP SMS','sms':'SMS','manual':'MANUAL'
+      'sms-kcb':'KCB SMS','sms-coop':'CO-OP SMS','sms':'SMS','manual':'MANUAL','photo':'📷 PHOTO RECEIPT'
     })[d.source]||'SMS';
     const dot=lvl=>`<span class="conf-dot conf-${lvl||'low'}" title="${lvl||'low'} confidence"></span>`;
+    const photoBlock=d.photoId?`<div class="draft-photo" id="thumb_${d.id}" onclick="openImgModal('${d.photoId}')"><span class="draft-photo-loading">Loading…</span></div>`:'';
+    const rawBlock=d.sourceText?`<div class="draft-raw" onclick="this.classList.toggle('expanded')" title="Click to expand">${escapeHtml(d.sourceText)}</div>`:'';
     return `<div class="draft-card" data-id="${d.id}">
       <div class="draft-card-head">
         <div style="flex:1;min-width:200px">
           <div class="draft-source">${sourceLabel} · ${new Date(d.createdAt).toLocaleString('en-KE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
-          <div class="draft-raw" onclick="this.classList.toggle('expanded')" title="Click to expand">${escapeHtml(d.sourceText)}</div>
+          ${rawBlock}
         </div>
+        ${photoBlock}
       </div>
       <div class="draft-fields">
         <div class="draft-field"><label>${dot(d.confidence&&d.confidence.date)} Date</label><input type="date" id="dr_${d.id}_date" value="${d.date}"/></div>
@@ -1413,6 +1570,10 @@ function renderDrafts(){
       </div>
     </div>`;
   }).join('');
+  // Load draft thumbnails
+  for(const d of state.drafts){
+    if(d.photoId){const el=document.getElementById('thumb_'+d.id);if(el)loadPhotoIntoEl(d.photoId,el);}
+  }
 }
 
 async function confirmDraft(id){
@@ -1427,9 +1588,19 @@ async function confirmDraft(id){
   const location=document.getElementById('dr_'+id+'_loc').value.trim();
   if(!date||!amount||amount<=0){showToast("Date and Amount are required","error");return;}
   if(!category){showToast("Pick a category","error");return;}
+  // Rename photo to a meaningful filename if one is attached
+  let photoName=d.photoName||'';
+  if(d.photoId){
+    const tag=(description||refCode||'receipt').toUpperCase().replace(/\s+/g,'-').substring(0,30);
+    const newBase=`${date}_${tag}_${Math.round(amount)}`;
+    const newName=await renamePhoto(d.photoId,newBase);
+    if(newName)photoName=newName;
+  }
   state.expenses.push({
     id:Date.now().toString(),date,category,description,amount,
-    paymentMethod,txCost,refCode,location,type:'expense'
+    paymentMethod,txCost,refCode,location,
+    sourceText:d.sourceText||'',photoId:d.photoId||'',photoName:photoName||'',
+    type:'expense'
   });
   state.drafts=state.drafts.filter(x=>x.id!==id);
   await saveData(false);refreshAll();
@@ -1452,6 +1623,8 @@ async function confirmDraftAsIncome(id){
 
 async function discardDraft(id){
   if(!confirm("Discard this draft?"))return;
+  const d=state.drafts.find(x=>x.id===id);
+  if(d&&d.photoId)await deletePhoto(d.photoId);
   state.drafts=state.drafts.filter(x=>x.id!==id);
   await saveData(false);refreshAll();
 }
