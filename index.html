@@ -45,6 +45,25 @@ body.dark nav{background:#070810;border-bottom:1px solid var(--border)}
 .tab{padding:14px 18px;font-size:13px;font-weight:500;color:var(--ink-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 .tab:hover:not(.active){color:var(--ink-soft)}
+.draft-badge{display:none;background:var(--warn);color:#fff;font-size:11px;padding:2px 7px;border-radius:10px;margin-left:6px;font-weight:600}
+.draft-badge.show{display:inline-block}
+.draft-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;box-shadow:var(--shadow);transition:background .25s}
+.draft-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px;flex-wrap:wrap}
+.draft-source{font-size:11px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.draft-raw{font-size:11px;color:var(--ink-muted);background:var(--surface);padding:8px 10px;border-radius:8px;margin-top:4px;font-family:monospace;line-height:1.4;max-height:60px;overflow:hidden;cursor:pointer;border:1px dashed var(--border)}
+.draft-raw.expanded{max-height:none}
+.draft-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px}
+.draft-field{display:flex;flex-direction:column;gap:4px}
+.draft-field label{font-size:11px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600;display:flex;align-items:center;gap:6px}
+.draft-field input,.draft-field select{padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ink);font-family:inherit;font-size:13px}
+.conf-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.conf-high{background:#27ae60}.conf-med{background:var(--warn)}.conf-low{background:var(--danger)}
+.draft-actions{display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:14px}
+.btn-confirm{background:var(--accent);color:#fff;border:none;padding:9px 20px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.btn-confirm:hover{opacity:.85}
+.btn-discard{background:transparent;color:var(--danger);border:1px solid var(--danger);padding:9px 16px;border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer}
+.btn-discard:hover{background:var(--danger);color:#fff}
+.draft-suggest{font-size:11px;color:var(--info);margin-top:2px}
 .page{display:none;padding:28px;max-width:1100px;margin:0 auto}
 .page.active{display:block}
 #authGate{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 60px);text-align:center;padding:40px}
@@ -194,6 +213,7 @@ body.dark #toast{border:1px solid var(--border)}
   <div class="tabs">
     <div class="tab active" onclick="switchTab('dashboard')">🏠 Dashboard</div>
     <div class="tab" onclick="switchTab('logExp')">➖ Log Expense</div>
+    <div class="tab" onclick="switchTab('drafts')">📥 Drafts <span id="draftCount" class="draft-badge"></span></div>
     <div class="tab" onclick="switchTab('logInc')">➕ Log Income</div>
     <div class="tab" onclick="switchTab('history')">📋 History</div>
     <div class="tab" onclick="switchTab('monthly')">📅 Monthly</div>
@@ -270,6 +290,24 @@ body.dark #toast{border:1px solid var(--border)}
       </div>
       <input type="hidden" id="iEditId" value=""/>
     </div>
+  </div>
+
+  <div class="page" id="tab-drafts">
+    <div class="section-title">Drafts <span id="draftCountInline" style="font-size:14px;color:var(--ink-muted);font-weight:400"></span></div>
+    <div class="section-sub">Paste an M-Pesa or bank SMS — the system extracts the details. Review and confirm to save as an expense.</div>
+
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:10px">📋 Paste a transaction message</div>
+      <textarea id="draftPasteBox" rows="4" placeholder="Paste your M-Pesa, Airtel, Equity, KCB or Co-op SMS here…&#10;e.g. SK4A23PQ Confirmed. Ksh500.00 paid to JAVA HOUSE WESTLANDS on 7/5/26 at 12:30 PM. New M-PESA balance is Ksh3,200.00. Transaction cost Ksh0.00." style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--ink);font-family:inherit;font-size:13px;resize:vertical"></textarea>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn-primary" onclick="parseAndAddDraft()">Parse Message</button>
+        <button class="btn-secondary" onclick="document.getElementById('draftPasteBox').value=''">Clear</button>
+        <div style="flex:1;text-align:right;font-size:12px;color:var(--ink-muted);align-self:center" id="parseHint">Tip: paste one message at a time</div>
+      </div>
+    </div>
+
+    <div id="draftList" style="margin-top:18px"></div>
+    <div id="draftEmpty" style="text-align:center;padding:40px;color:var(--ink-muted)">No drafts pending review.</div>
   </div>
 
   <div class="page" id="tab-history">
@@ -397,7 +435,7 @@ const DEFAULT_INCOME_CATS={
 const DEFAULT_PAYMENT_METHODS=["Cash","Mobile (M-Pesa)","Mobile (Airtel)","Debit Card","Credit Card","Bank Transfer"];
 
 let state={
-  expenses:[],income:[],
+  expenses:[],income:[],drafts:[],
   expenseCats:JSON.parse(JSON.stringify(DEFAULT_EXPENSE_CATS)),
   incomeCats:JSON.parse(JSON.stringify(DEFAULT_INCOME_CATS)),
   paymentMethods:[...DEFAULT_PAYMENT_METHODS],
@@ -548,6 +586,7 @@ async function loadData(){
       if(json.incomeCats)state.incomeCats=json.incomeCats;
       if(json.paymentMethods)state.paymentMethods=json.paymentMethods;
       if(json.theme)state.theme=json.theme;
+      if(json.drafts)state.drafts=json.drafts;
     }else{
       await saveData(false);
     }
@@ -563,7 +602,7 @@ async function saveData(notify=true){
   try{
     const folderId=await ensureFolder();
     const body=JSON.stringify({
-      expenses:state.expenses,income:state.income,
+      expenses:state.expenses,income:state.income,drafts:state.drafts,
       expenseCats:state.expenseCats,incomeCats:state.incomeCats,
       paymentMethods:state.paymentMethods,theme:state.theme,
       lastUpdated:new Date().toISOString()
@@ -920,6 +959,7 @@ function refreshAll(){
   renderDayPatternInsight();
   renderDashCharts();
   renderHistory();
+  renderDrafts();
   renderMonthGrid();
   renderMonthSelect();
   renderMonthDetail();
@@ -1225,6 +1265,196 @@ function showToast(msg,type=''){
 function showStatus(msg){const s=document.getElementById('statusBar');document.getElementById('statusMsg').textContent=msg;s.style.display='flex';}
 function hideStatus(){document.getElementById('statusBar').style.display='none';}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
+
+// ============== SMS PARSER + DRAFTS ==============
+function parseSMS(text){
+  const t=(text||'').trim();if(!t)return null;
+  const out={
+    sourceText:t,source:'manual',
+    date:today(),amount:0,paymentMethod:'',refCode:'',location:'',
+    description:'',recipient:'',txCost:0,suggestedCategory:'',
+    confidence:{date:'low',amount:'low',recipient:'low',refCode:'low',paymentMethod:'low'}
+  };
+
+  const isMpesa=/M-?PESA/i.test(t)||/^[A-Z]{2,3}[A-Z0-9]{6,9}\s+Confirmed/i.test(t);
+  const isAirtel=/AIRTEL\s*MONEY|airtel/i.test(t)&&!isMpesa;
+  const isEquity=/EQUITY|EAZZY/i.test(t);
+  const isKCB=/\bKCB\b/i.test(t);
+  const isCoop=/CO-?OP\s*BANK|COOP/i.test(t);
+
+  const amtMatch=t.match(/(?:Ksh|KES|Kshs|KSh|Sh)\s*\.?\s*([\d,]+(?:\.\d{1,2})?)/i);
+  if(amtMatch){out.amount=parseFloat(amtMatch[1].replace(/,/g,''));out.confidence.amount='high';}
+
+  const txMatch=t.match(/[Tt]ransaction\s+cost[\s,]+(?:Ksh|KES|Kshs|KSh)\s*\.?\s*([\d,]+(?:\.\d{1,2})?)/i);
+  if(txMatch)out.txCost=parseFloat(txMatch[1].replace(/,/g,''));
+
+  const dateMatch=t.match(/\b(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})\b/);
+  if(dateMatch){
+    let d=parseInt(dateMatch[1]),m=parseInt(dateMatch[2]),y=parseInt(dateMatch[3]);
+    if(y<100)y+=2000;
+    if(m>=1&&m<=12&&d>=1&&d<=31){
+      out.date=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      out.confidence.date='high';
+    }
+  }else{out.confidence.date='med';}
+
+  const codeMatch=t.match(/\b([A-Z]{2,3}[A-Z0-9]{7,9})\b/);
+  if(codeMatch&&isMpesa){out.refCode=codeMatch[1];out.confidence.refCode='high';}
+
+  if(isMpesa){out.paymentMethod='Mobile (M-Pesa)';out.confidence.paymentMethod='high';}
+  else if(isAirtel){out.paymentMethod='Mobile (Airtel)';out.confidence.paymentMethod='high';}
+  else if(isEquity||isKCB||isCoop){out.paymentMethod='Bank Transfer';out.confidence.paymentMethod='med';}
+
+  let recipient='',isReceived=false,isWithdraw=false;
+  let m=t.match(/\bsent to\s+(.+?)(?:\s+on\b|\s+for account|\.\s|\s+New\b)/i);
+  if(m)recipient=m[1].trim();
+  if(!recipient){m=t.match(/\bpaid to\s+(.+?)(?:\s+on\b|\.\s|\s+New\b)/i);if(m)recipient=m[1].trim();}
+  if(!recipient){m=t.match(/\breceived\s+(?:Ksh|KES|Kshs)[\s\.\d,]+from\s+(.+?)(?:\s+on\b|\.\s|\s+New\b)/i);if(m){recipient=m[1].trim();isReceived=true;}}
+  if(!recipient){m=t.match(/\bwithdrawn from\s+(.+?)(?:\s+on\b|\.\s|\s+New\b)/i);if(m){recipient=m[1].trim();isWithdraw=true;}}
+  if(!recipient){m=t.match(/sent\s+(?:Ksh|KES)[\s\.\d,]+to\s+(.+?)(?:\s+on\b|\.\s|,)/i);if(m)recipient=m[1].trim();}
+  if(!recipient){m=t.match(/\bto\s+([A-Z][A-Z0-9 \-&\.]{2,40}?)(?:\s+on\b|\s+for\b|\.\s|\s+account)/);if(m)recipient=m[1].trim();}
+  if(!recipient&&(isEquity||isKCB||isCoop)){m=t.match(/\b(?:to|from)\s+([A-Z][A-Z0-9 \-&\.]{2,40})/);if(m)recipient=m[1].trim();}
+
+  recipient=recipient.replace(/\s+\d{7,}\s*$/,'').replace(/\s+/g,' ').trim();
+  if(recipient){out.recipient=recipient;out.confidence.recipient='high';out.description=recipient;}
+
+  if(isReceived){out.description='Received from '+recipient;out._isIncome=true;}
+  if(isWithdraw){out.description='Cash withdrawal — '+recipient;}
+
+  if(recipient){const sugg=suggestCategoryFromHistory(recipient,t);if(sugg)out.suggestedCategory=sugg;}
+
+  out.source=isMpesa?'sms-mpesa':isAirtel?'sms-airtel':isEquity?'sms-equity':isKCB?'sms-kcb':isCoop?'sms-coop':'sms';
+  return out;
+}
+
+function suggestCategoryFromHistory(recipient,fullText){
+  const tokens=recipient.toUpperCase().split(/\s+/).filter(w=>w.length>=3);
+  if(!tokens.length)return '';
+  const scoreMap={};
+  for(const e of state.expenses){
+    const hay=((e.description||'')+' '+(e.location||'')).toUpperCase();
+    if(!hay)continue;
+    let score=0;
+    for(const tok of tokens)if(hay.includes(tok))score++;
+    if(score>0)scoreMap[e.category]=(scoreMap[e.category]||0)+score;
+  }
+  let best='',bestScore=0;
+  for(const k of Object.keys(scoreMap))if(scoreMap[k]>bestScore){best=k;bestScore=scoreMap[k];}
+  return best;
+}
+
+function parseAndAddDraft(){
+  const txt=document.getElementById('draftPasteBox').value.trim();
+  if(!txt){showToast("Paste a message first","error");return;}
+  const parsed=parseSMS(txt);
+  if(!parsed||(!parsed.amount&&!parsed.recipient)){
+    showToast("Couldn't extract details — review the draft manually","warn");
+  }
+  parsed.id=Date.now().toString();
+  parsed.createdAt=new Date().toISOString();
+  state.drafts.unshift(parsed);
+  document.getElementById('draftPasteBox').value='';
+  saveData(false);
+  refreshAll();
+  switchTab('drafts');
+  showToast("Draft created — review below","success");
+}
+
+function renderDrafts(){
+  const wrap=document.getElementById('draftList');
+  const empty=document.getElementById('draftEmpty');
+  const count=state.drafts.length;
+  const badge=document.getElementById('draftCount');
+  if(badge){badge.textContent=count;badge.className='draft-badge'+(count?' show':'');}
+  const inline=document.getElementById('draftCountInline');
+  if(inline)inline.textContent=count?`(${count} pending)`:'';
+  if(!wrap||!empty)return;
+  if(!count){wrap.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  const allCats=flattenCats(state.expenseCats).map(x=>x.cat).sort();
+  wrap.innerHTML=state.drafts.map(d=>{
+    const sourceLabel=({
+      'sms-mpesa':'M-PESA SMS','sms-airtel':'AIRTEL SMS','sms-equity':'EQUITY SMS',
+      'sms-kcb':'KCB SMS','sms-coop':'CO-OP SMS','sms':'SMS','manual':'MANUAL'
+    })[d.source]||'SMS';
+    const dot=lvl=>`<span class="conf-dot conf-${lvl||'low'}" title="${lvl||'low'} confidence"></span>`;
+    return `<div class="draft-card" data-id="${d.id}">
+      <div class="draft-card-head">
+        <div style="flex:1;min-width:200px">
+          <div class="draft-source">${sourceLabel} · ${new Date(d.createdAt).toLocaleString('en-KE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+          <div class="draft-raw" onclick="this.classList.toggle('expanded')" title="Click to expand">${escapeHtml(d.sourceText)}</div>
+        </div>
+      </div>
+      <div class="draft-fields">
+        <div class="draft-field"><label>${dot(d.confidence&&d.confidence.date)} Date</label><input type="date" id="dr_${d.id}_date" value="${d.date}"/></div>
+        <div class="draft-field"><label>${dot(d.confidence&&d.confidence.amount)} Amount (Kshs)</label><input type="number" id="dr_${d.id}_amount" value="${d.amount||''}" step="0.50"/></div>
+        <div class="draft-field"><label>Category</label>
+          <select id="dr_${d.id}_cat">
+            <option value="">— Select —</option>
+            ${allCats.map(c=>`<option${c===d.suggestedCategory?' selected':''}>${escapeHtml(c)}</option>`).join('')}
+          </select>
+          ${d.suggestedCategory?`<div class="draft-suggest">💡 Suggested from past entries</div>`:''}
+        </div>
+        <div class="draft-field"><label>Description</label><input type="text" id="dr_${d.id}_desc" value="${escapeAttr(d.description||'')}"/></div>
+        <div class="draft-field"><label>${dot(d.confidence&&d.confidence.paymentMethod)} Payment Method</label>
+          <select id="dr_${d.id}_pay">
+            <option value="">—</option>
+            ${state.paymentMethods.map(m=>`<option${m===d.paymentMethod?' selected':''}>${escapeHtml(m)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="draft-field"><label>Transaction Cost</label><input type="number" id="dr_${d.id}_tx" value="${d.txCost||''}" step="0.50"/></div>
+        <div class="draft-field"><label>${dot(d.confidence&&d.confidence.refCode)} Ref. Code</label><input type="text" id="dr_${d.id}_ref" value="${escapeAttr(d.refCode||'')}"/></div>
+        <div class="draft-field"><label>Location</label><input type="text" id="dr_${d.id}_loc" value="${escapeAttr(d.location||'')}" placeholder="optional"/></div>
+      </div>
+      <div class="draft-actions">
+        <button class="btn-confirm" onclick="confirmDraft('${d.id}')">✓ Confirm & Save</button>
+        <button class="btn-discard" onclick="discardDraft('${d.id}')">Discard</button>
+        ${d._isIncome?`<button onclick="confirmDraftAsIncome('${d.id}')" style="background:var(--info-lt);color:var(--info);border:none;padding:9px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500">Save as Income instead</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function confirmDraft(id){
+  const d=state.drafts.find(x=>x.id===id);if(!d)return;
+  const date=document.getElementById('dr_'+id+'_date').value;
+  const amount=parseFloat(document.getElementById('dr_'+id+'_amount').value)||0;
+  const category=document.getElementById('dr_'+id+'_cat').value.trim();
+  const description=document.getElementById('dr_'+id+'_desc').value.trim();
+  const paymentMethod=document.getElementById('dr_'+id+'_pay').value;
+  const txCost=parseFloat(document.getElementById('dr_'+id+'_tx').value)||0;
+  const refCode=document.getElementById('dr_'+id+'_ref').value.trim();
+  const location=document.getElementById('dr_'+id+'_loc').value.trim();
+  if(!date||!amount||amount<=0){showToast("Date and Amount are required","error");return;}
+  if(!category){showToast("Pick a category","error");return;}
+  state.expenses.push({
+    id:Date.now().toString(),date,category,description,amount,
+    paymentMethod,txCost,refCode,location,type:'expense'
+  });
+  state.drafts=state.drafts.filter(x=>x.id!==id);
+  await saveData(false);refreshAll();
+  showToast(`Saved — Kshs ${fmtNum(amount)}`,"success");
+}
+
+async function confirmDraftAsIncome(id){
+  const d=state.drafts.find(x=>x.id===id);if(!d)return;
+  const date=document.getElementById('dr_'+id+'_date').value;
+  const amount=parseFloat(document.getElementById('dr_'+id+'_amount').value)||0;
+  const description=document.getElementById('dr_'+id+'_desc').value.trim();
+  if(!date||!amount||amount<=0){showToast("Date and Amount are required","error");return;}
+  const incCats=flattenCats(state.incomeCats);
+  const category=incCats.length?incCats[0].cat:'Other Income';
+  state.income.push({id:Date.now().toString(),date,category,description,amount,type:'income'});
+  state.drafts=state.drafts.filter(x=>x.id!==id);
+  await saveData(false);refreshAll();
+  showToast(`Income saved — Kshs ${fmtNum(amount)}`,"success");
+}
+
+async function discardDraft(id){
+  if(!confirm("Discard this draft?"))return;
+  state.drafts=state.drafts.filter(x=>x.id!==id);
+  await saveData(false);refreshAll();
+}
 
 initMSAL();
 </script>
