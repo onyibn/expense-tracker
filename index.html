@@ -234,7 +234,9 @@ body.dark #toast{border:1px solid var(--border)}
         <div class="form-group"><label>Amount (Kshs)</label><input type="number" id="fAmount" placeholder="0" min="0" step="0.50"/></div>
         <div class="form-group"><label>Payment Method</label><select id="fPayment"></select></div>
         <div class="form-group"><label>Transaction Cost (Kshs)</label><input type="number" id="fTxCost" placeholder="0" min="0" step="0.50"/></div>
-        <div class="form-group" style="align-self:end;display:flex;gap:10px;flex-wrap:wrap">
+        <div class="form-group"><label>Ref. Code <span style="color:var(--ink-muted);font-weight:400">(optional)</span></label><input type="text" id="fRefCode" placeholder="e.g. M-Pesa code, receipt no."/></div>
+        <div class="form-group"><label>Location <span style="color:var(--ink-muted);font-weight:400">(optional)</span></label><input type="text" id="fLocation" placeholder="e.g. Java Westlands, Naivas Ngong Rd"/></div>
+        <div class="form-group full" style="align-self:end;display:flex;gap:10px;flex-wrap:wrap">
           <button class="btn-primary" id="btnSave" onclick="saveExpense()"><span id="saveLabel">Save Expense</span></button>
           <button class="btn-secondary" id="btnCancelEdit" onclick="cancelEdit()" style="display:none">Cancel</button>
         </div>
@@ -536,7 +538,8 @@ async function loadData(){
       state.expenses=expIn.map(e=>({
         id:e.id,date:e.date,category:e.category,description:e.description||'',
         amount:e.amount,paymentMethod:e.paymentMethod||'',
-        txCost:typeof e.txCost==='number'?e.txCost:0,type:'expense'
+        txCost:typeof e.txCost==='number'?e.txCost:0,
+        refCode:e.refCode||'',location:e.location||'',type:'expense'
       }));
       state.income=(json.income||[]).map(i=>({
         id:i.id,date:i.date,category:i.category,description:i.description||'',amount:i.amount,type:'income'
@@ -779,6 +782,8 @@ async function saveExpense(){
   const amt=parseFloat(document.getElementById('fAmount').value);
   const pay=document.getElementById('fPayment').value;
   const tx=parseFloat(document.getElementById('fTxCost').value)||0;
+  const refCode=document.getElementById('fRefCode').value.trim();
+  const location=document.getElementById('fLocation').value.trim();
   const editId=document.getElementById('fEditId').value;
   if(!date||!cat||!amt||amt<=0){showToast("Fill in Date, Category and Amount","error");return;}
   const all=flattenCats(state.expenseCats);
@@ -791,10 +796,10 @@ async function saveExpense(){
   document.getElementById('saveLabel').innerHTML='<span class="spinner"></span> Saving…';
   if(editId){
     const idx=state.expenses.findIndex(e=>e.id===editId);
-    if(idx>-1)state.expenses[idx]={id:editId,date,category:cat,description:desc,amount:amt,paymentMethod:pay,txCost:tx,type:'expense'};
+    if(idx>-1)state.expenses[idx]={id:editId,date,category:cat,description:desc,amount:amt,paymentMethod:pay,txCost:tx,refCode,location,type:'expense'};
     showToast(`Updated — Kshs ${fmtNum(amt)}`,"success");
   }else{
-    state.expenses.push({id:Date.now().toString(),date,category:cat,description:desc,amount:amt,paymentMethod:pay,txCost:tx,type:'expense'});
+    state.expenses.push({id:Date.now().toString(),date,category:cat,description:desc,amount:amt,paymentMethod:pay,txCost:tx,refCode,location,type:'expense'});
     showToast(`Saved — Kshs ${fmtNum(amt)}`,"success");
   }
   await saveData(false);
@@ -813,6 +818,8 @@ function editExpense(id){
   document.getElementById('fAmount').value=e.amount;
   document.getElementById('fPayment').value=e.paymentMethod||'';
   document.getElementById('fTxCost').value=e.txCost||'';
+  document.getElementById('fRefCode').value=e.refCode||'';
+  document.getElementById('fLocation').value=e.location||'';
   document.getElementById('fEditId').value=e.id;
   document.getElementById('logExpTitle').textContent='Edit Expense';
   document.getElementById('logExpSub').textContent='Update the details below and click Save.';
@@ -829,6 +836,8 @@ function cancelEdit(){
   document.getElementById('fAmount').value='';
   document.getElementById('fPayment').value='';
   document.getElementById('fTxCost').value='';
+  document.getElementById('fRefCode').value='';
+  document.getElementById('fLocation').value='';
   document.getElementById('fEditId').value='';
   document.getElementById('logExpTitle').textContent='Log an Expense';
   document.getElementById('logExpSub').textContent='One row per transaction. Type a new category to add it on the fly.';
@@ -1016,7 +1025,7 @@ function renderHistory(){
   data.sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
   if(fm)data=data.filter(e=>MONTHS_SHORT[new Date(e.date+'T00:00:00').getMonth()]===fm);
   if(fc)data=data.filter(e=>e.category===fc);
-  if(fs)data=data.filter(e=>(e.description||'').toLowerCase().includes(fs)||e.category.toLowerCase().includes(fs));
+  if(fs)data=data.filter(e=>(e.description||'').toLowerCase().includes(fs)||e.category.toLowerCase().includes(fs)||(e.refCode||'').toLowerCase().includes(fs)||(e.location||'').toLowerCase().includes(fs));
   const tbody=document.getElementById('historyBody');
   const empty=document.getElementById('historyEmpty');
   if(!data.length){tbody.innerHTML='';empty.style.display='block';return;}
@@ -1024,12 +1033,19 @@ function renderHistory(){
   tbody.innerHTML=data.map(e=>{
     const isInc=e.type==='income';
     const editFn=isInc?'editIncome':'editExpense';
+    let descCell=escapeHtml(e.description||'—');
+    if(!isInc){
+      const meta=[];
+      if(e.refCode)meta.push(`<span style="color:var(--info);font-size:11px">Ref: ${escapeHtml(e.refCode)}</span>`);
+      if(e.location)meta.push(`<span style="color:var(--ink-muted);font-size:11px">📍 ${escapeHtml(e.location)}</span>`);
+      if(meta.length)descCell=(e.description?escapeHtml(e.description)+'<br>':'')+meta.join(' &nbsp;·&nbsp; ');
+    }
     return `<tr>
       <td>${fmtDate(e.date)}</td>
       <td>${new Date(e.date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'short'})}</td>
       <td>${isInc?'<span style="color:var(--info);font-weight:600">+ In</span>':'<span style="color:var(--danger);font-weight:600">− Out</span>'}</td>
       <td class="cat-badge ${isInc?'income':''}"><span>${escapeHtml(e.category)}</span></td>
-      <td>${escapeHtml(e.description||'—')}</td>
+      <td>${descCell}</td>
       <td class="pay-method">${isInc?'—':escapeHtml(e.paymentMethod||'—')}</td>
       <td class="amount" style="color:${isInc?'var(--accent)':'var(--ink)'}">${isInc?'+':''}${fmt(e.amount)}</td>
       <td class="fee-cell">${isInc?'—':(e.txCost?fmt(e.txCost):'—')}</td>
