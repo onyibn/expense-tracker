@@ -76,6 +76,25 @@ body.dark nav{background:#070810;border-bottom:1px solid var(--border)}
 .img-modal-bg img{max-width:100%;max-height:90vh;border-radius:8px;box-shadow:0 0 40px rgba(0,0,0,.5)}
 .img-modal-close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,.15);color:#fff;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:20px}
 .source-row{background:var(--surface);font-family:monospace;font-size:11px;color:var(--ink-soft);padding:10px 14px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.toggle-switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-knob{position:absolute;inset:0;background:var(--border);border-radius:24px;cursor:pointer;transition:.25s}
+.toggle-knob:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.25s}
+.toggle-switch input:checked+.toggle-knob{background:var(--accent)}
+.toggle-switch input:checked+.toggle-knob:before{transform:translateX(20px)}
+.mass-bar{display:none;align-items:center;gap:12px;padding:10px 14px;background:var(--danger);color:#fff;border-radius:10px;margin-bottom:12px;flex-wrap:wrap}
+.mass-bar.show{display:flex}
+.mass-bar button{background:rgba(255,255,255,.2);color:#fff;border:none;padding:6px 14px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600}
+.mass-bar button:hover{background:rgba(255,255,255,.35)}
+.mass-cb{accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
+.sort-btn{background:none;border:none;cursor:pointer;font-size:12px;color:var(--ink-muted);padding:0 4px;vertical-align:middle}
+.sort-btn.asc::after{content:'↑';color:var(--accent)}
+.sort-btn.desc::after{content:'↓';color:var(--accent)}
+.suggest-list{position:absolute;top:100%;left:0;right:0;z-index:30;background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;max-height:160px;overflow-y:auto;box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.suggest-item{padding:9px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border)}
+.suggest-item:hover{background:var(--surface)}
+.suggest-item:last-child{border-bottom:none;border-radius:0 0 10px 10px}
+.has-suggest{position:relative}
 .page{display:none;padding:28px;max-width:1100px;margin:0 auto}
 .page.active{display:block}
 #authGate{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 60px);text-align:center;padding:40px}
@@ -262,12 +281,22 @@ body.dark #toast{border:1px solid var(--border)}
             <div class="combo-list" id="fCategoryList"></div>
           </div>
         </div>
-        <div class="form-group full"><label>Description / Note</label><input type="text" id="fDesc" placeholder="e.g. Lunch with client at Java"/></div>
+        <div class="form-group full"><label>Description / Note</label>
+          <div class="has-suggest">
+            <input type="text" id="fDesc" placeholder="e.g. Lunch with client at Java" autocomplete="off" oninput="onSuggestInput('fDesc','desc')" onblur="setTimeout(()=>hideSuggest('fDesc'),200)"/>
+            <div class="suggest-list" id="fDescSuggest" style="display:none"></div>
+          </div>
+        </div>
         <div class="form-group"><label>Amount (Kshs)</label><input type="number" id="fAmount" placeholder="0" min="0" step="0.50"/></div>
         <div class="form-group"><label>Payment Method</label><select id="fPayment"></select></div>
         <div class="form-group"><label>Transaction Cost (Kshs)</label><input type="number" id="fTxCost" placeholder="0" min="0" step="0.50"/></div>
         <div class="form-group"><label>Ref. Code <span style="color:var(--ink-muted);font-weight:400">(optional)</span></label><input type="text" id="fRefCode" placeholder="e.g. M-Pesa code, receipt no."/></div>
-        <div class="form-group"><label>Location <span style="color:var(--ink-muted);font-weight:400">(optional)</span></label><input type="text" id="fLocation" placeholder="e.g. Java Westlands, Naivas Ngong Rd"/></div>
+        <div class="form-group"><label>Location <span style="color:var(--ink-muted);font-weight:400">(optional)</span></label>
+          <div class="has-suggest">
+            <input type="text" id="fLocation" placeholder="e.g. Java Westlands, Naivas Ngong Rd" autocomplete="off" oninput="onSuggestInput('fLocation','location')" onblur="setTimeout(()=>hideSuggest('fLocation'),200)"/>
+            <div class="suggest-list" id="fLocationSuggest" style="display:none"></div>
+          </div>
+        </div>
         <div class="form-group full" style="align-self:end;display:flex;gap:10px;flex-wrap:wrap">
           <button class="btn-primary" id="btnSave" onclick="saveExpense()"><span id="saveLabel">Save Expense</span></button>
           <button class="btn-secondary" id="btnCancelEdit" onclick="cancelEdit()" style="display:none">Cancel</button>
@@ -295,6 +324,7 @@ body.dark #toast{border:1px solid var(--border)}
         </div>
         <div class="form-group full"><label>Description / Note</label><input type="text" id="iDesc" placeholder="e.g. November salary, Project payment"/></div>
         <div class="form-group"><label>Amount (Kshs)</label><input type="number" id="iAmount" placeholder="0" min="0" step="0.50"/></div>
+        <div class="form-group"><label>Ref. ID <span style="color:var(--ink-muted);font-weight:400">(optional)</span></label><input type="text" id="iRefCode" placeholder="e.g. Bank ref, M-Pesa code"/></div>
         <div class="form-group" style="align-self:end;display:flex;gap:10px;flex-wrap:wrap">
           <button class="btn-primary income-btn" id="btnSaveInc" onclick="saveIncome()"><span id="saveIncLabel">Save Income</span></button>
           <button class="btn-secondary" id="btnCancelEditInc" onclick="cancelEditInc()" style="display:none">Cancel</button>
@@ -333,9 +363,19 @@ body.dark #toast{border:1px solid var(--border)}
       <select id="filterCat" onchange="renderHistory()"><option value="">All categories</option></select>
       <input type="text" id="filterSearch" placeholder="Search description…" oninput="renderHistory()" style="min-width:200px"/>
     </div>
+    <div class="mass-bar" id="massBar">
+      <span id="massCount">0 selected</span>
+      <button onclick="massDeleteSelected()">🗑 Delete Selected</button>
+      <button onclick="selectAllRows()">Select All</button>
+      <button onclick="clearSelection()" style="background:rgba(255,255,255,.1)">Clear</button>
+    </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Date</th><th>Day</th><th>Type</th><th>Category</th><th>Description</th><th>Method</th><th>Amount</th><th>Tx Cost</th><th></th></tr></thead>
+        <thead><tr>
+          <th id="thCb" style="display:none;width:36px"><input type="checkbox" class="mass-cb" id="cbAll" onchange="toggleAllRows(this.checked)"/></th>
+          <th>Date <button class="sort-btn desc" id="sortDateBtn" onclick="toggleDateSort()" title="Sort by date"></button></th>
+          <th>Day</th><th>Type</th><th>Category</th><th>Description</th><th>Method</th><th>Amount</th><th>Tx Cost</th><th></th>
+        </tr></thead>
         <tbody id="historyBody"></tbody>
       </table>
     </div>
@@ -366,7 +406,17 @@ body.dark #toast{border:1px solid var(--border)}
 
   <div class="page" id="tab-settings">
     <div class="section-title">Settings</div>
-    <div class="section-sub">Manage your categories, groups, and payment methods.</div>
+    <div class="section-sub">Manage categories, payment methods, and app behaviour.</div>
+    <div class="card manage-section">
+      <div class="card-title" style="margin-bottom:14px">App Options</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-size:14px;font-weight:600">Mass Delete Mode</div>
+          <div style="font-size:12px;color:var(--ink-muted);margin-top:2px">Show checkboxes in History to delete multiple entries at once</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" id="massDeleteToggle" onchange="toggleMassDelete(this.checked)"/><span class="toggle-knob"></span></label>
+      </div>
+    </div>
     <div class="card manage-section">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
         <div class="card-title" style="margin:0">Expense Categories</div>
@@ -601,7 +651,8 @@ async function loadData(){
         type:'expense'
       }));
       state.income=(json.income||[]).map(i=>({
-        id:i.id,date:i.date,category:i.category,description:i.description||'',amount:i.amount,type:'income'
+        id:i.id,date:i.date,category:i.category,description:i.description||'',
+        amount:i.amount,refCode:i.refCode||'',type:'income'
       }));
       if(json.expenseCats)state.expenseCats=json.expenseCats;
       if(json.incomeCats)state.incomeCats=json.incomeCats;
@@ -856,7 +907,15 @@ async function saveExpense(){
   document.getElementById('saveLabel').innerHTML='<span class="spinner"></span> Saving…';
   if(editId){
     const idx=state.expenses.findIndex(e=>e.id===editId);
-    if(idx>-1)state.expenses[idx]={id:editId,date,category:cat,description:desc,amount:amt,paymentMethod:pay,txCost:tx,refCode,location,type:'expense'};
+    if(idx>-1){
+      const old=state.expenses[idx];
+      state.expenses[idx]={
+        id:editId,date,category:cat,description:desc,amount:amt,
+        paymentMethod:pay,txCost:tx,refCode,location,
+        sourceText:old.sourceText||'',photoId:old.photoId||'',photoName:old.photoName||'',
+        type:'expense'
+      };
+    }
     showToast(`Updated — Kshs ${fmtNum(amt)}`,"success");
   }else{
     state.expenses.push({id:Date.now().toString(),date,category:cat,description:desc,amount:amt,paymentMethod:pay,txCost:tx,refCode,location,type:'expense'});
@@ -920,6 +979,7 @@ async function saveIncome(){
   const cat=document.getElementById('iCategory').value.trim();
   const desc=document.getElementById('iDesc').value.trim();
   const amt=parseFloat(document.getElementById('iAmount').value);
+  const refCode=document.getElementById('iRefCode').value.trim();
   const editId=document.getElementById('iEditId').value;
   if(!date||!cat||!amt||amt<=0){showToast("Fill in Date, Category and Amount","error");return;}
   const all=flattenCats(state.incomeCats);
@@ -932,10 +992,10 @@ async function saveIncome(){
   document.getElementById('saveIncLabel').innerHTML='<span class="spinner"></span> Saving…';
   if(editId){
     const idx=state.income.findIndex(i=>i.id===editId);
-    if(idx>-1)state.income[idx]={id:editId,date,category:cat,description:desc,amount:amt,type:'income'};
+    if(idx>-1)state.income[idx]={id:editId,date,category:cat,description:desc,amount:amt,refCode,type:'income'};
     showToast(`Updated — Kshs ${fmtNum(amt)}`,"success");
   }else{
-    state.income.push({id:Date.now().toString(),date,category:cat,description:desc,amount:amt,type:'income'});
+    state.income.push({id:Date.now().toString(),date,category:cat,description:desc,amount:amt,refCode,type:'income'});
     showToast(`Saved — Kshs ${fmtNum(amt)}`,"success");
   }
   await saveData(false);
@@ -952,6 +1012,7 @@ function editIncome(id){
   document.getElementById('iCategory').value=i.category;
   document.getElementById('iDesc').value=i.description||'';
   document.getElementById('iAmount').value=i.amount;
+  document.getElementById('iRefCode').value=i.refCode||'';
   document.getElementById('iEditId').value=i.id;
   document.getElementById('logIncTitle').textContent='Edit Income';
   document.getElementById('logIncSub').textContent='Update the details below and click Save.';
@@ -966,6 +1027,7 @@ function cancelEditInc(){
   document.getElementById('iCategory').value='';
   document.getElementById('iDesc').value='';
   document.getElementById('iAmount').value='';
+  document.getElementById('iRefCode').value='';
   document.getElementById('iEditId').value='';
   document.getElementById('logIncTitle').textContent='Log Income';
   document.getElementById('logIncSub').textContent='Track salary, freelance pay, M-Pesa received, and any other income.';
@@ -1078,6 +1140,57 @@ function renderDashCharts(){
   });
 }
 
+let histSortAsc=false;
+let massDeleteActive=false;
+
+function toggleDateSort(){
+  histSortAsc=!histSortAsc;
+  const btn=document.getElementById('sortDateBtn');
+  if(btn){btn.className='sort-btn '+(histSortAsc?'asc':'desc');}
+  renderHistory();
+}
+
+function toggleMassDelete(on){
+  massDeleteActive=on;
+  renderHistory();
+}
+
+function toggleAllRows(checked){
+  document.querySelectorAll('.row-cb').forEach(cb=>cb.checked=checked);
+  updateMassBar();
+}
+
+function updateMassBar(){
+  const sel=document.querySelectorAll('.row-cb:checked').length;
+  const bar=document.getElementById('massBar');
+  const cnt=document.getElementById('massCount');
+  if(bar){bar.className='mass-bar'+(massDeleteActive&&sel?'  show':'');if(massDeleteActive)bar.classList.add('show');}
+  if(cnt)cnt.textContent=sel+' selected';
+}
+
+function selectAllRows(){
+  document.querySelectorAll('.row-cb').forEach(cb=>cb.checked=true);
+  updateMassBar();
+}
+function clearSelection(){
+  document.querySelectorAll('.row-cb').forEach(cb=>cb.checked=false);
+  updateMassBar();
+}
+
+async function massDeleteSelected(){
+  const ids=[...document.querySelectorAll('.row-cb:checked')].map(cb=>cb.dataset.id);
+  if(!ids.length){showToast("Nothing selected","error");return;}
+  if(!confirm(`Delete ${ids.length} transaction(s)?`))return;
+  for(const id of ids){
+    const e=state.expenses.find(x=>x.id===id);
+    if(e&&e.photoId)await deletePhoto(e.photoId);
+  }
+  state.expenses=state.expenses.filter(e=>!ids.includes(e.id));
+  state.income=state.income.filter(i=>!ids.includes(i.id));
+  await saveData(true);refreshAll();
+  showToast(`Deleted ${ids.length} transaction(s)`,"success");
+}
+
 function renderHistory(){
   const ft=document.getElementById('filterType').value;
   const fm=document.getElementById('filterMonth').value;
@@ -1086,47 +1199,70 @@ function renderHistory(){
   let data=[];
   if(!ft||ft==='expense')data=data.concat(state.expenses);
   if(!ft||ft==='income')data=data.concat(state.income);
-  data.sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+  data.sort((a,b)=>{
+    const cmp=a.date.localeCompare(b.date)||a.id.localeCompare(b.id);
+    return histSortAsc?cmp:-cmp;
+  });
   if(fm)data=data.filter(e=>MONTHS_SHORT[new Date(e.date+'T00:00:00').getMonth()]===fm);
   if(fc)data=data.filter(e=>e.category===fc);
   if(fs)data=data.filter(e=>(e.description||'').toLowerCase().includes(fs)||e.category.toLowerCase().includes(fs)||(e.refCode||'').toLowerCase().includes(fs)||(e.location||'').toLowerCase().includes(fs));
   const tbody=document.getElementById('historyBody');
   const empty=document.getElementById('historyEmpty');
+  const bar=document.getElementById('massBar');
+  const thCb=document.getElementById('thCb');
+  const cbAll=document.getElementById('cbAll');
+  if(thCb)thCb.style.display=massDeleteActive?'':'none';
+  if(bar)bar.className='mass-bar'+(massDeleteActive?' show':'');
+  if(cbAll)cbAll.checked=false;
   if(!data.length){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  tbody.innerHTML=data.map(e=>{
-    const isInc=e.type==='income';
-    const editFn=isInc?'editIncome':'editExpense';
-    let descCell=escapeHtml(e.description||'—');
-    if(!isInc){
-      const meta=[];
-      if(e.refCode)meta.push(`<span style="color:var(--info);font-size:11px">Ref: ${escapeHtml(e.refCode)}</span>`);
-      if(e.location)meta.push(`<span style="color:var(--ink-muted);font-size:11px">📍 ${escapeHtml(e.location)}</span>`);
-      if(meta.length)descCell=(e.description?escapeHtml(e.description)+'<br>':'')+meta.join(' &nbsp;·&nbsp; ');
-    }
-    return `<tr data-row-id="${e.id}">
-      <td>${fmtDate(e.date)}</td>
-      <td>${new Date(e.date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'short'})}</td>
-      <td>${isInc?'<span style="color:var(--info);font-weight:600">+ In</span>':'<span style="color:var(--danger);font-weight:600">− Out</span>'}</td>
-      <td class="cat-badge ${isInc?'income':''}"><span>${escapeHtml(e.category)}</span></td>
-      <td>${descCell}</td>
-      <td class="pay-method">${isInc?'—':escapeHtml(e.paymentMethod||'—')}</td>
-      <td class="amount" style="color:${isInc?'var(--accent)':'var(--ink)'}">${isInc?'+':''}${fmt(e.amount)}</td>
-      <td class="fee-cell">${isInc?'—':(e.txCost?fmt(e.txCost):'—')}</td>
-      <td class="act-btn">
-        ${e.photoId?`<button class="history-photo-btn" onclick="openImgModal('${e.photoId}')" title="View receipt photo">🖼️</button>`:''}
-        ${e.sourceText?`<button class="history-source-btn" onclick="toggleSourceRow('${e.id}')" title="View source SMS">📨</button>`:''}
-        <button onclick="${editFn}('${e.id}')" title="Edit">✏️</button>
-        <button class="del" onclick="deleteTransaction('${e.id}','${e.type}')" title="Delete">🗑</button>
-      </td>
-    </tr>${e.sourceText?`<tr id="src_${e.id}" style="display:none"><td colspan="9" class="source-row">${escapeHtml(e.sourceText)}</td></tr>`:''}`;
-  }).join('');
-}
 
-function toggleSourceRow(id){
-  const r=document.getElementById('src_'+id);
-  if(!r)return;
-  r.style.display=r.style.display==='none'?'table-row':'none';
+  // Group by type if showing both
+  let rows=[];
+  if(!ft){
+    const expenses=data.filter(e=>e.type==='expense');
+    const income=data.filter(e=>e.type==='income');
+    if(expenses.length)rows.push({header:'Expenses',items:expenses});
+    if(income.length)rows.push({header:'Income',items:income});
+  }else{
+    rows.push({header:null,items:data});
+  }
+
+  tbody.innerHTML=rows.map(group=>{
+    const headerRow=group.header?`<tr><td colspan="10" style="background:var(--surface);font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-muted);padding:8px 14px">${group.header}</td></tr>`:'';
+    const dataRows=group.items.map(e=>{
+      const isInc=e.type==='income';
+      const editFn=isInc?'editIncome':'editExpense';
+      let descCell=escapeHtml(e.description||'—');
+      const meta=[];
+      if(!isInc){
+        if(e.refCode)meta.push(`<span style="color:var(--info);font-size:11px">Ref: ${escapeHtml(e.refCode)}</span>`);
+        if(e.location)meta.push(`<span style="color:var(--ink-muted);font-size:11px">📍 ${escapeHtml(e.location)}</span>`);
+      }else{
+        if(e.refCode)meta.push(`<span style="color:var(--info);font-size:11px">Ref: ${escapeHtml(e.refCode)}</span>`);
+      }
+      if(meta.length)descCell=(e.description?escapeHtml(e.description)+'<br>':'')+meta.join(' &nbsp;·&nbsp; ');
+      const cbCell=massDeleteActive?`<td style="width:36px"><input type="checkbox" class="mass-cb row-cb" data-id="${e.id}" onchange="updateMassBar()"/></td>`:'';
+      return `<tr data-row-id="${e.id}">
+        ${cbCell}
+        <td>${fmtDate(e.date)}</td>
+        <td>${new Date(e.date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'short'})}</td>
+        <td>${isInc?'<span style="color:var(--info);font-weight:600">+ In</span>':'<span style="color:var(--danger);font-weight:600">− Out</span>'}</td>
+        <td class="cat-badge ${isInc?'income':''}"><span>${escapeHtml(e.category)}</span></td>
+        <td>${descCell}</td>
+        <td class="pay-method">${isInc?'—':escapeHtml(e.paymentMethod||'—')}</td>
+        <td class="amount" style="color:${isInc?'var(--accent)':'var(--ink)'}">${isInc?'+':''}${fmt(e.amount)}</td>
+        <td class="fee-cell">${isInc?'—':(e.txCost?fmt(e.txCost):'—')}</td>
+        <td class="act-btn">
+          ${e.photoId?`<button class="history-photo-btn" onclick="openImgModal('${e.photoId}')" title="View receipt photo">🖼️</button>`:''}
+          ${e.sourceText?`<button class="history-source-btn" onclick="toggleSourceRow('${e.id}')" title="View source SMS">📨</button>`:''}
+          <button onclick="${editFn}('${e.id}')" title="Edit">✏️</button>
+          <button class="del" onclick="deleteTransaction('${e.id}','${e.type}')" title="Delete">🗑</button>
+        </td>
+      </tr>${e.sourceText?`<tr id="src_${e.id}" style="display:none"><td colspan="${massDeleteActive?10:9}" class="source-row">${escapeHtml(e.sourceText)}</td></tr>`:''}`;
+    }).join('');
+    return headerRow+dataRows;
+  }).join('');
 }
 
 function populateFilterCats(){
@@ -1297,6 +1433,40 @@ function showToast(msg,type=''){
 function showStatus(msg){const s=document.getElementById('statusBar');document.getElementById('statusMsg').textContent=msg;s.style.display='flex';}
 function hideStatus(){document.getElementById('statusBar').style.display='none';}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
+function toggleSourceRow(id){const r=document.getElementById('src_'+id);if(!r)return;r.style.display=r.style.display==='none'?'table-row':'none';}
+
+// ============== AUTOCOMPLETE SUGGESTIONS ==============
+function onSuggestInput(fieldId,type){
+  const input=document.getElementById(fieldId);
+  const listId=fieldId+'Suggest';
+  const list=document.getElementById(listId);
+  if(!input||!list)return;
+  const val=input.value.trim().toLowerCase();
+  if(!val){list.style.display='none';return;}
+  const seen=new Set();
+  const matches=[];
+  for(const e of state.expenses){
+    const raw=type==='desc'?(e.description||''):(e.location||'');
+    if(!raw)continue;
+    const norm=raw.trim();
+    if(norm.toLowerCase().includes(val)&&!seen.has(norm)){seen.add(norm);matches.push(norm);}
+    if(matches.length>=6)break;
+  }
+  if(!matches.length){list.style.display='none';return;}
+  list.innerHTML=matches.map(m=>`<div class="suggest-item" onmousedown="pickSuggest('${fieldId}','${escapeAttr(m)}')">${escapeHtml(m)}</div>`).join('');
+  list.style.display='block';
+}
+
+function pickSuggest(fieldId,val){
+  const input=document.getElementById(fieldId);
+  if(input)input.value=val;
+  hideSuggest(fieldId);
+}
+
+function hideSuggest(fieldId){
+  const list=document.getElementById(fieldId+'Suggest');
+  if(list)list.style.display='none';
+}
 
 // ============== PHOTO RECEIPTS ==============
 const photoUrlCache={};
