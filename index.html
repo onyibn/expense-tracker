@@ -23,7 +23,15 @@
   --warn-lt:#fdf5e6; --info-lt:#eaf1fb;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Lato',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.55;-webkit-font-smoothing:antialiased}
+body{font-family:'Lato',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.55;-webkit-font-smoothing:antialiased;font-size:15px}
+/* MODE TOGGLE */
+.mode-toggle{display:inline-flex;background:var(--surface);border:1px solid var(--bd);margin-bottom:20px;border-radius:2px;overflow:hidden}
+.mode-btn{background:transparent;color:var(--mu);border:none;padding:11px 26px;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s;border-right:1px solid var(--bd)}
+.mode-btn:last-child{border-right:none}
+.mode-btn:hover:not(.active){color:var(--ink);background:var(--hover)}
+.mode-btn.active{background:var(--r);color:#fff}
+.mode-btn.active[data-mode="income"]{background:var(--info)}
+.expense-only.hidden,.income-only.hidden{display:none !important}
 /* NAV */
 nav{background:var(--sb);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
 .nav-brand{display:flex;align-items:center;gap:14px}
@@ -38,7 +46,7 @@ nav{background:var(--sb);padding:0 32px;display:flex;align-items:center;justify-
 .btn-signout:hover{color:#fff;border-color:#666}
 /* TABS */
 .tabs{background:var(--surface);border-bottom:1px solid var(--bd);padding:0 32px;display:flex;overflow-x:auto}
-.tab{padding:14px 16px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.tab{padding:15px 18px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
 .tab.active{color:var(--r);border-bottom-color:var(--r)}
 .tab:hover:not(.active){color:var(--ink)}
 /* DRAFT BADGE */
@@ -57,9 +65,9 @@ nav{background:var(--sb);padding:0 32px;display:flex;align-items:center;justify-
 .btn-ms:hover{opacity:.9}
 .ms-icon{width:20px;height:20px;flex-shrink:0}
 /* SECTION TITLES — red square accent */
-.section-title{font-size:13px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ink);margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.section-title{font-size:14px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ink);margin-bottom:6px;display:flex;align-items:center;gap:10px}
 .section-title::before{content:'';display:inline-block;width:8px;height:8px;background:var(--r);flex-shrink:0}
-.section-sub{font-size:13px;color:var(--mu);margin-bottom:24px;padding-left:18px}
+.section-sub{font-size:14px;color:var(--mu);margin-bottom:24px;padding-left:18px}
 /* CARD */
 .card{background:var(--surface);border:1px solid var(--bd);padding:24px;box-shadow:var(--shadow)}
 .card-title{font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--ink);margin-bottom:16px;display:flex;align-items:center;gap:8px}
@@ -71,23 +79,23 @@ nav{background:var(--sb);padding:0 32px;display:flex;align-items:center;justify-
 .kpi.expense{border-left-color:var(--r)}
 .kpi.fees{border-left-color:var(--warn)}
 .kpi.net{border-left-color:var(--info)}
-.kpi-label{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px}
-.kpi-value{font-size:26px;font-weight:900;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
-.kpi-sub{font-size:11px;color:var(--mu2);margin-top:6px}
+.kpi-label{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px}
+.kpi-value{font-size:30px;font-weight:900;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.kpi-sub{font-size:12px;color:var(--mu2);margin-top:6px}
 /* FORMS */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .form-group{display:flex;flex-direction:column;gap:6px}
 .form-group.full{grid-column:1/-1}
-label{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em}
-input,select,textarea{font-family:'Lato',sans-serif;font-size:14px;border:1px solid var(--bd);padding:10px 13px;background:var(--surface);color:var(--ink);transition:border-color .15s;width:100%;border-radius:2px}
+label{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em}
+input,select,textarea{font-family:'Lato',sans-serif;font-size:15px;border:1px solid var(--bd);padding:11px 14px;background:var(--surface);color:var(--ink);transition:border-color .15s;width:100%;border-radius:2px}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--r)}
 /* BUTTONS */
-.btn-primary{background:var(--r);color:#fff;border:none;padding:11px 26px;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:8px;justify-content:center;border-radius:2px}
+.btn-primary{background:var(--r);color:#fff;border:none;padding:12px 28px;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:8px;justify-content:center;border-radius:2px}
 .btn-primary:hover{background:var(--rd)}
 .btn-primary:disabled{opacity:.45;cursor:not-allowed}
 .btn-primary.income-btn{background:var(--info)}
 .btn-primary.income-btn:hover{background:#185fa8}
-.btn-secondary{background:transparent;color:var(--ink-soft);border:1px solid var(--bd);padding:10px 20px;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .15s;border-radius:2px}
+.btn-secondary{background:transparent;color:var(--ink-soft);border:1px solid var(--bd);padding:11px 22px;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .15s;border-radius:2px}
 .btn-secondary:hover{border-color:var(--ink);background:var(--hover)}
 .btn-tiny{background:transparent;border:1px solid var(--bd);color:var(--mu);padding:4px 10px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .15s;font-family:'Lato',sans-serif;border-radius:2px}
 .btn-tiny:hover{border-color:var(--r);color:var(--r)}
@@ -102,22 +110,22 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--r)}
 .combo-item.add-new{color:var(--r);font-weight:700;border-top:1px solid var(--bd);font-size:12px;letter-spacing:.04em}
 /* TABLE */
 .table-wrap{overflow-x:auto;border:1px solid var(--bd);background:var(--surface)}
-table{width:100%;border-collapse:collapse;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px}
 thead tr{background:var(--sb);color:#fff}
-thead th{padding:11px 14px;text-align:left;font-weight:700;font-size:10px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+thead th{padding:12px 14px;text-align:left;font-weight:700;font-size:11px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
 tbody tr{border-bottom:1px solid var(--bd);transition:background .12s}
 tbody tr:hover{background:var(--hover)}
 tbody tr:last-child{border-bottom:none}
-td{padding:10px 14px;color:var(--text)}
-td.amount{font-weight:900;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:-.01em}
-td.fee-cell{color:var(--warn);font-size:12px;white-space:nowrap;font-weight:700}
-td.cat-badge span{display:inline-block;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--accent-lt);color:var(--r);border-radius:2px}
+td{padding:11px 14px;color:var(--text)}
+td.amount{font-weight:900;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:-.01em;font-size:14px}
+td.fee-cell{color:var(--warn);font-size:13px;white-space:nowrap;font-weight:700}
+td.cat-badge span{display:inline-block;padding:3px 9px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--accent-lt);color:var(--r);border-radius:2px}
 td.cat-badge.income span{background:var(--info-lt);color:var(--info)}
 td.act-btn{white-space:nowrap}
-td.act-btn button{background:none;border:none;color:var(--mu2);cursor:pointer;font-size:14px;transition:color .15s;padding:3px 5px}
+td.act-btn button{background:none;border:none;color:var(--mu2);cursor:pointer;font-size:15px;transition:color .15s;padding:4px 6px}
 td.act-btn button:hover{color:var(--r)}
 td.act-btn button.del:hover{color:var(--danger)}
-td.pay-method{font-size:11px;color:var(--mu);white-space:nowrap}
+td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
 /* MONTH GRID */
 .month-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:24px}
 .month-card{background:var(--surface);border:1px solid var(--bd);padding:14px;text-align:center;transition:border-color .15s;border-left:3px solid var(--bd2)}
@@ -167,8 +175,7 @@ td.pay-method{font-size:11px;color:var(--mu);white-space:nowrap}
 .draft-card{background:var(--surface);border:1px solid var(--bd);border-left:3px solid var(--warn);padding:20px;margin-bottom:12px;box-shadow:var(--shadow)}
 .draft-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px;flex-wrap:wrap}
 .draft-source{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em}
-.draft-raw{font-size:11px;color:var(--mu);background:var(--bg);padding:8px 10px;margin-top:4px;font-family:monospace;line-height:1.4;max-height:54px;overflow:hidden;cursor:pointer;border:1px dashed var(--bd)}
-.draft-raw.expanded{max-height:none}
+.draft-raw{font-size:12px;color:var(--text);background:var(--bg);padding:10px 12px;margin-top:6px;font-family:monospace;line-height:1.5;cursor:pointer;border:1px dashed var(--bd);white-space:pre-wrap;word-break:break-word}
 .draft-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin-bottom:14px}
 .draft-field{display:flex;flex-direction:column;gap:4px}
 .draft-field label{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:6px}
@@ -261,9 +268,8 @@ td.pay-method{font-size:11px;color:var(--mu);white-space:nowrap}
 
   <div class="tabs">
     <div class="tab active" onclick="switchTab('dashboard')"><i class="ti ti-layout-dashboard"></i> Dashboard</div>
-    <div class="tab" onclick="switchTab('logExp')"><i class="ti ti-minus"></i> Log Expense</div>
     <div class="tab" onclick="switchTab('drafts')"><i class="ti ti-inbox"></i> Drafts <span id="draftCount" class="draft-badge"></span></div>
-    <div class="tab" onclick="switchTab('logInc')"><i class="ti ti-plus"></i> Log Income</div>
+    <div class="tab" onclick="switchTab('log')"><i class="ti ti-plus-minus"></i> Log</div>
     <div class="tab" onclick="switchTab('history')"><i class="ti ti-list"></i> History</div>
     <div class="tab" onclick="switchTab('monthly')"><i class="ti ti-calendar"></i> Monthly</div>
     <div class="tab" onclick="switchTab('charts')"><i class="ti ti-chart-bar"></i> Charts</div>
@@ -287,16 +293,43 @@ td.pay-method{font-size:11px;color:var(--mu);white-space:nowrap}
     </div>
   </div>
 
-  <div class="page" id="tab-logExp">
-    <div class="section-title" id="logExpTitle">Log an Expense</div>
-    <div class="section-sub" id="logExpSub">One row per transaction. Type a new category to add it on the fly.</div>
+  <div class="page" id="tab-drafts">
+    <div class="section-title">Drafts <span id="draftCountInline" style="font-size:14px;color:var(--mu);font-weight:400"></span></div>
+    <div class="section-sub">Paste an M-Pesa or bank SMS — the system extracts the details. Review and confirm to save as an expense.</div>
+
+    <div class="card">
+      <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Paste a transaction message</div>
+      <textarea id="draftPasteBox" rows="4" placeholder="Paste your M-Pesa, Airtel, Equity, KCB or Co-op SMS here…&#10;e.g. SK4A23PQ Confirmed. Ksh500.00 paid to JAVA HOUSE WESTLANDS on 7/5/26 at 12:30 PM. New M-PESA balance is Ksh3,200.00. Transaction cost Ksh0.00." style="width:100%;padding:12px;border:1px solid var(--bd);background:var(--surface);color:var(--ink);font-family:'Lato',sans-serif;font-size:14px;resize:vertical;border-radius:2px"></textarea>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn-primary" onclick="parseAndAddDraft()">Parse Message</button>
+        <button class="btn-secondary" onclick="document.getElementById('draftPasteBox').value=''">Clear</button>
+        <button class="btn-secondary" onclick="document.getElementById('photoInput').click()"><i class="ti ti-camera"></i> Attach Photo</button>
+        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoUpload(event)"/>
+        <div style="flex:1;text-align:right;font-size:12px;color:var(--mu);align-self:center" id="parseHint">Tip: paste one message at a time, or attach a receipt photo</div>
+      </div>
+    </div>
+
+    <div id="draftList" style="margin-top:18px"></div>
+    <div id="draftEmpty" style="text-align:center;padding:40px;color:var(--mu)">No drafts pending review.</div>
+  </div>
+
+  <div class="page" id="tab-log">
+    <div class="section-title" id="logTitle">Log a Transaction</div>
+    <div class="section-sub" id="logSub">Pick a mode below, then fill the form.</div>
+
+    <div class="mode-toggle" id="modeToggle">
+      <button class="mode-btn active" data-mode="expense" onclick="setLogMode('expense')"><i class="ti ti-minus"></i> Expense</button>
+      <button class="mode-btn" data-mode="income" onclick="setLogMode('income')"><i class="ti ti-plus"></i> Income</button>
+    </div>
+
     <div class="card">
       <div class="form-grid">
         <div class="form-group"><label>Date</label><input type="date" id="fDate"/></div>
-        <div class="form-group"><label>Category</label>
+        <div class="form-group"><label id="catLabel">Category</label>
           <div class="combo-wrap">
-            <input type="text" id="fCategory" autocomplete="off" placeholder="Select or type a new one…" oninput="onComboInput('expense')" onfocus="onComboInput('expense')" onblur="setTimeout(()=>hideCombo('expense'),200)"/>
+            <input type="text" id="fCategory" autocomplete="off" placeholder="Select or type a new one…" oninput="onComboInputUnified()" onfocus="onComboInputUnified()" onblur="setTimeout(()=>hideCombo(logMode),200)"/>
             <div class="combo-list" id="fCategoryList"></div>
+            <div class="combo-list" id="iCategoryList" style="display:none"></div>
           </div>
         </div>
         <div class="form-group full"><label>Description / Note</label>
@@ -306,70 +339,27 @@ td.pay-method{font-size:11px;color:var(--mu);white-space:nowrap}
           </div>
         </div>
         <div class="form-group"><label>Amount (Kshs)</label><input type="number" id="fAmount" placeholder="0" min="0" step="0.50"/></div>
-        <div class="form-group"><label>Payment Method</label><select id="fPayment"></select></div>
-        <div class="form-group"><label>Transaction Cost (Kshs)</label><input type="number" id="fTxCost" placeholder="0" min="0" step="0.50"/></div>
-        <div class="form-group"><label>Ref. Code <span style="color:var(--ink-muted);font-weight:400">(optional)</span></label><input type="text" id="fRefCode" placeholder="e.g. M-Pesa code, receipt no."/></div>
-        <div class="form-group"><label>Location <span style="color:var(--ink-muted);font-weight:400">(optional)</span></label>
+        <div class="form-group expense-only"><label>Payment Method</label><select id="fPayment"></select></div>
+        <div class="form-group expense-only"><label>Transaction Cost (Kshs)</label><input type="number" id="fTxCost" placeholder="0" min="0" step="0.50"/></div>
+        <div class="form-group"><label>Ref. Code <span style="color:var(--mu);font-weight:400">(optional)</span></label><input type="text" id="fRefCode" placeholder="e.g. M-Pesa code, receipt no."/></div>
+        <div class="form-group expense-only"><label>Location <span style="color:var(--mu);font-weight:400">(optional)</span></label>
           <div class="has-suggest">
             <input type="text" id="fLocation" placeholder="e.g. Java Westlands, Naivas Ngong Rd" autocomplete="off" oninput="onSuggestInput('fLocation','location')" onblur="setTimeout(()=>hideSuggest('fLocation'),200)"/>
             <div class="suggest-list" id="fLocationSuggest" style="display:none"></div>
           </div>
         </div>
         <div class="form-group full" style="align-self:end;display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn-primary" id="btnSave" onclick="saveExpense()"><span id="saveLabel">Save Expense</span></button>
-          <button class="btn-secondary" id="btnCancelEdit" onclick="cancelEdit()" style="display:none">Cancel</button>
+          <button class="btn-primary" id="btnSave" onclick="saveTransaction()"><span id="saveLabel">Save Expense</span></button>
+          <button class="btn-secondary" id="btnCancelEdit" onclick="cancelEditUnified()" style="display:none">Cancel</button>
         </div>
       </div>
       <input type="hidden" id="fEditId" value=""/>
+      <input type="hidden" id="fEditType" value=""/>
     </div>
-    <div style="margin-top:20px">
-      <div style="font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:12px">⚡ Quick Log</div>
+    <div style="margin-top:20px" id="quickLogWrap" class="expense-only">
+      <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">Quick Log</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap" id="quickBtns"></div>
     </div>
-  </div>
-
-  <div class="page" id="tab-logInc">
-    <div class="section-title" id="logIncTitle">Log Income</div>
-    <div class="section-sub" id="logIncSub">Track salary, freelance pay, M-Pesa received, and any other income.</div>
-    <div class="card">
-      <div class="form-grid">
-        <div class="form-group"><label>Date</label><input type="date" id="iDate"/></div>
-        <div class="form-group"><label>Source / Category</label>
-          <div class="combo-wrap">
-            <input type="text" id="iCategory" autocomplete="off" placeholder="Select or type a new one…" oninput="onComboInput('income')" onfocus="onComboInput('income')" onblur="setTimeout(()=>hideCombo('income'),200)"/>
-            <div class="combo-list" id="iCategoryList"></div>
-          </div>
-        </div>
-        <div class="form-group full"><label>Description / Note</label><input type="text" id="iDesc" placeholder="e.g. November salary, Project payment"/></div>
-        <div class="form-group"><label>Amount (Kshs)</label><input type="number" id="iAmount" placeholder="0" min="0" step="0.50"/></div>
-        <div class="form-group"><label>Ref. ID <span style="color:var(--ink-muted);font-weight:400">(optional)</span></label><input type="text" id="iRefCode" placeholder="e.g. Bank ref, M-Pesa code"/></div>
-        <div class="form-group" style="align-self:end;display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn-primary income-btn" id="btnSaveInc" onclick="saveIncome()"><span id="saveIncLabel">Save Income</span></button>
-          <button class="btn-secondary" id="btnCancelEditInc" onclick="cancelEditInc()" style="display:none">Cancel</button>
-        </div>
-      </div>
-      <input type="hidden" id="iEditId" value=""/>
-    </div>
-  </div>
-
-  <div class="page" id="tab-drafts">
-    <div class="section-title">Drafts <span id="draftCountInline" style="font-size:14px;color:var(--ink-muted);font-weight:400"></span></div>
-    <div class="section-sub">Paste an M-Pesa or bank SMS — the system extracts the details. Review and confirm to save as an expense.</div>
-
-    <div class="card">
-      <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Paste a transaction message</div>
-      <textarea id="draftPasteBox" rows="4" placeholder="Paste your M-Pesa, Airtel, Equity, KCB or Co-op SMS here…&#10;e.g. SK4A23PQ Confirmed. Ksh500.00 paid to JAVA HOUSE WESTLANDS on 7/5/26 at 12:30 PM. New M-PESA balance is Ksh3,200.00. Transaction cost Ksh0.00." style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--ink);font-family:inherit;font-size:13px;resize:vertical"></textarea>
-      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
-        <button class="btn-primary" onclick="parseAndAddDraft()">Parse Message</button>
-        <button class="btn-secondary" onclick="document.getElementById('draftPasteBox').value=''">Clear</button>
-        <button class="btn-secondary" onclick="document.getElementById('photoInput').click()"><i class="ti ti-camera"></i> Attach Photo</button>
-        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoUpload(event)"/>
-        <div style="flex:1;text-align:right;font-size:12px;color:var(--ink-muted);align-self:center" id="parseHint">Tip: paste one message at a time, or attach a receipt photo</div>
-      </div>
-    </div>
-
-    <div id="draftList" style="margin-top:18px"></div>
-    <div id="draftEmpty" style="text-align:center;padding:40px;color:var(--ink-muted)">No drafts pending review.</div>
   </div>
 
   <div class="page" id="tab-history">
@@ -698,7 +688,7 @@ async function saveData(notify=true){
 }
 
 function getCatsObj(type){return type==='expense'?state.expenseCats:state.incomeCats;}
-function getInputId(type){return type==='expense'?'fCategory':'iCategory';}
+function getInputId(type){return 'fCategory';}
 function getListId(type){return type==='expense'?'fCategoryList':'iCategoryList';}
 function flattenCats(catsObj){
   const all=[];
@@ -885,56 +875,102 @@ function buildQuickBtns(){
     if(!all.some(x=>x.cat===q.cat))return;
     const b=document.createElement('button');
     b.className='btn-secondary';b.textContent=q.label;
-    b.onclick=()=>{document.getElementById('fCategory').value=q.cat;document.getElementById('fAmount').focus();switchTab('logExp');};
+    b.onclick=()=>{setLogMode('expense');document.getElementById('fCategory').value=q.cat;switchTab('log');document.getElementById('fAmount').focus();};
     wrap.appendChild(b);
   });
 }
 
-async function saveExpense(){
+let logMode='expense';
+
+function setLogMode(mode){
+  logMode=mode;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+  document.querySelectorAll('.expense-only').forEach(el=>el.classList.toggle('hidden',mode!=='expense'));
+  document.querySelectorAll('.income-only').forEach(el=>el.classList.toggle('hidden',mode!=='income'));
+  // Update label and button styling
+  document.getElementById('catLabel').textContent=mode==='expense'?'Category':'Source / Category';
+  const btn=document.getElementById('btnSave');
+  if(mode==='income'){btn.classList.add('income-btn');document.getElementById('saveLabel').textContent='Save Income';}
+  else{btn.classList.remove('income-btn');document.getElementById('saveLabel').textContent='Save Expense';}
+  // Hide both combo lists when switching
+  document.getElementById('fCategoryList').classList.remove('show');
+  document.getElementById('iCategoryList').classList.remove('show');
+  // Show the right list element (hide the wrong one entirely)
+  document.getElementById('fCategoryList').style.display=mode==='expense'?'':'none';
+  document.getElementById('iCategoryList').style.display=mode==='income'?'':'none';
+  // Clear category field unless editing
+  if(!document.getElementById('fEditId').value){
+    document.getElementById('fCategory').value='';
+  }
+}
+
+function onComboInputUnified(){onComboInput(logMode);}
+
+async function saveTransaction(){
   const date=document.getElementById('fDate').value;
   const cat=document.getElementById('fCategory').value.trim();
   const desc=document.getElementById('fDesc').value.trim();
   const amt=parseFloat(document.getElementById('fAmount').value);
-  const pay=document.getElementById('fPayment').value;
-  const tx=parseFloat(document.getElementById('fTxCost').value)||0;
   const refCode=document.getElementById('fRefCode').value.trim();
-  const location=document.getElementById('fLocation').value.trim();
   const editId=document.getElementById('fEditId').value;
+  const editType=document.getElementById('fEditType').value;
   if(!date||!cat||!amt||amt<=0){showToast("Fill in Date, Category and Amount","error");return;}
-  const all=flattenCats(state.expenseCats);
-  if(!all.some(x=>x.cat===cat)){
-    if(!state.expenseCats["Other"])state.expenseCats["Other"]=[];
-    state.expenseCats["Other"].push(cat);
-  }
+
   const btn=document.getElementById('btnSave');
   btn.disabled=true;
   document.getElementById('saveLabel').innerHTML='<span class="spinner"></span> Saving…';
-  if(editId){
-    const idx=state.expenses.findIndex(e=>e.id===editId);
-    if(idx>-1){
-      const old=state.expenses[idx];
-      state.expenses[idx]={
-        id:editId,date,category:cat,description:desc,amount:amt,
-        paymentMethod:pay,txCost:tx,refCode,location,
-        sourceText:old.sourceText||'',photoId:old.photoId||'',photoName:old.photoName||'',
-        type:'expense'
-      };
+
+  if(logMode==='expense'){
+    const pay=document.getElementById('fPayment').value;
+    const tx=parseFloat(document.getElementById('fTxCost').value)||0;
+    const location=document.getElementById('fLocation').value.trim();
+    const all=flattenCats(state.expenseCats);
+    if(!all.some(x=>x.cat===cat)){
+      if(!state.expenseCats["Other"])state.expenseCats["Other"]=[];
+      state.expenseCats["Other"].push(cat);
     }
-    showToast(`Updated — Kshs ${fmtNum(amt)}`,"success");
+    if(editId&&editType==='expense'){
+      const idx=state.expenses.findIndex(e=>e.id===editId);
+      if(idx>-1){
+        const old=state.expenses[idx];
+        state.expenses[idx]={
+          id:editId,date,category:cat,description:desc,amount:amt,
+          paymentMethod:pay,txCost:tx,refCode,location,
+          sourceText:old.sourceText||'',photoId:old.photoId||'',photoName:old.photoName||'',
+          type:'expense'
+        };
+      }
+      showToast(`Updated — Kshs ${fmtNum(amt)}`,"success");
+    }else{
+      state.expenses.push({id:Date.now().toString(),date,category:cat,description:desc,amount:amt,paymentMethod:pay,txCost:tx,refCode,location,sourceText:'',photoId:'',photoName:'',type:'expense'});
+      showToast(`Saved — Kshs ${fmtNum(amt)}`,"success");
+    }
   }else{
-    state.expenses.push({id:Date.now().toString(),date,category:cat,description:desc,amount:amt,paymentMethod:pay,txCost:tx,refCode,location,type:'expense'});
-    showToast(`Saved — Kshs ${fmtNum(amt)}`,"success");
+    const all=flattenCats(state.incomeCats);
+    if(!all.some(x=>x.cat===cat)){
+      if(!state.incomeCats["Other"])state.incomeCats["Other"]=[];
+      state.incomeCats["Other"].push(cat);
+    }
+    if(editId&&editType==='income'){
+      const idx=state.income.findIndex(i=>i.id===editId);
+      if(idx>-1)state.income[idx]={id:editId,date,category:cat,description:desc,amount:amt,refCode,type:'income'};
+      showToast(`Updated — Kshs ${fmtNum(amt)}`,"success");
+    }else{
+      state.income.push({id:Date.now().toString(),date,category:cat,description:desc,amount:amt,refCode,type:'income'});
+      showToast(`Saved — Kshs ${fmtNum(amt)}`,"success");
+    }
   }
+
   await saveData(false);
-  cancelEdit();
+  cancelEditUnified();
   btn.disabled=false;
-  document.getElementById('saveLabel').textContent='Save Expense';
   refreshAll();
 }
 
 function editExpense(id){
   const e=state.expenses.find(x=>x.id===id);
   if(!e)return;
+  setLogMode('expense');
   document.getElementById('fDate').value=e.date;
   document.getElementById('fCategory').value=e.category;
   document.getElementById('fDesc').value=e.description||'';
@@ -944,15 +980,38 @@ function editExpense(id){
   document.getElementById('fRefCode').value=e.refCode||'';
   document.getElementById('fLocation').value=e.location||'';
   document.getElementById('fEditId').value=e.id;
-  document.getElementById('logExpTitle').textContent='Edit Expense';
-  document.getElementById('logExpSub').textContent='Update the details below and click Save.';
+  document.getElementById('fEditType').value='expense';
+  document.getElementById('logTitle').textContent='Edit Expense';
+  document.getElementById('logSub').textContent='Update the details below and click Save.';
   document.getElementById('saveLabel').textContent='Update Expense';
   document.getElementById('btnCancelEdit').style.display='block';
-  switchTab('logExp');
+  // Disable mode toggle during edit
+  document.querySelectorAll('.mode-btn').forEach(b=>b.disabled=true);
+  switchTab('log');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-function cancelEdit(){
+function editIncome(id){
+  const i=state.income.find(x=>x.id===id);
+  if(!i)return;
+  setLogMode('income');
+  document.getElementById('fDate').value=i.date;
+  document.getElementById('fCategory').value=i.category;
+  document.getElementById('fDesc').value=i.description||'';
+  document.getElementById('fAmount').value=i.amount;
+  document.getElementById('fRefCode').value=i.refCode||'';
+  document.getElementById('fEditId').value=i.id;
+  document.getElementById('fEditType').value='income';
+  document.getElementById('logTitle').textContent='Edit Income';
+  document.getElementById('logSub').textContent='Update the details below and click Save.';
+  document.getElementById('saveLabel').textContent='Update Income';
+  document.getElementById('btnCancelEdit').style.display='block';
+  document.querySelectorAll('.mode-btn').forEach(b=>b.disabled=true);
+  switchTab('log');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function cancelEditUnified(){
   document.getElementById('fDate').value=today();
   document.getElementById('fCategory').value='';
   document.getElementById('fDesc').value='';
@@ -962,10 +1021,13 @@ function cancelEdit(){
   document.getElementById('fRefCode').value='';
   document.getElementById('fLocation').value='';
   document.getElementById('fEditId').value='';
-  document.getElementById('logExpTitle').textContent='Log an Expense';
-  document.getElementById('logExpSub').textContent='One row per transaction. Type a new category to add it on the fly.';
-  document.getElementById('saveLabel').textContent='Save Expense';
+  document.getElementById('fEditType').value='';
+  document.getElementById('logTitle').textContent='Log a Transaction';
+  document.getElementById('logSub').textContent='Pick a mode below, then fill the form.';
   document.getElementById('btnCancelEdit').style.display='none';
+  document.querySelectorAll('.mode-btn').forEach(b=>b.disabled=false);
+  // Reset to expense mode by default after cancel
+  setLogMode('expense');
 }
 
 async function deleteTransaction(id,type){
@@ -978,70 +1040,8 @@ async function deleteTransaction(id,type){
   await saveData(true);refreshAll();
 }
 
-async function saveIncome(){
-  const date=document.getElementById('iDate').value;
-  const cat=document.getElementById('iCategory').value.trim();
-  const desc=document.getElementById('iDesc').value.trim();
-  const amt=parseFloat(document.getElementById('iAmount').value);
-  const refCode=document.getElementById('iRefCode').value.trim();
-  const editId=document.getElementById('iEditId').value;
-  if(!date||!cat||!amt||amt<=0){showToast("Fill in Date, Category and Amount","error");return;}
-  const all=flattenCats(state.incomeCats);
-  if(!all.some(x=>x.cat===cat)){
-    if(!state.incomeCats["Other"])state.incomeCats["Other"]=[];
-    state.incomeCats["Other"].push(cat);
-  }
-  const btn=document.getElementById('btnSaveInc');
-  btn.disabled=true;
-  document.getElementById('saveIncLabel').innerHTML='<span class="spinner"></span> Saving…';
-  if(editId){
-    const idx=state.income.findIndex(i=>i.id===editId);
-    if(idx>-1)state.income[idx]={id:editId,date,category:cat,description:desc,amount:amt,refCode,type:'income'};
-    showToast(`Updated — Kshs ${fmtNum(amt)}`,"success");
-  }else{
-    state.income.push({id:Date.now().toString(),date,category:cat,description:desc,amount:amt,refCode,type:'income'});
-    showToast(`Saved — Kshs ${fmtNum(amt)}`,"success");
-  }
-  await saveData(false);
-  cancelEditInc();
-  btn.disabled=false;
-  document.getElementById('saveIncLabel').textContent='Save Income';
-  refreshAll();
-}
-
-function editIncome(id){
-  const i=state.income.find(x=>x.id===id);
-  if(!i)return;
-  document.getElementById('iDate').value=i.date;
-  document.getElementById('iCategory').value=i.category;
-  document.getElementById('iDesc').value=i.description||'';
-  document.getElementById('iAmount').value=i.amount;
-  document.getElementById('iRefCode').value=i.refCode||'';
-  document.getElementById('iEditId').value=i.id;
-  document.getElementById('logIncTitle').textContent='Edit Income';
-  document.getElementById('logIncSub').textContent='Update the details below and click Save.';
-  document.getElementById('saveIncLabel').textContent='Update Income';
-  document.getElementById('btnCancelEditInc').style.display='block';
-  switchTab('logInc');
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function cancelEditInc(){
-  document.getElementById('iDate').value=today();
-  document.getElementById('iCategory').value='';
-  document.getElementById('iDesc').value='';
-  document.getElementById('iAmount').value='';
-  document.getElementById('iRefCode').value='';
-  document.getElementById('iEditId').value='';
-  document.getElementById('logIncTitle').textContent='Log Income';
-  document.getElementById('logIncSub').textContent='Track salary, freelance pay, M-Pesa received, and any other income.';
-  document.getElementById('saveIncLabel').textContent='Save Income';
-  document.getElementById('btnCancelEditInc').style.display='none';
-}
-
 function setDefaultDates(){
   document.getElementById('fDate').value=today();
-  document.getElementById('iDate').value=today();
 }
 
 function refreshAll(){
@@ -1422,7 +1422,7 @@ function switchTab(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
-  const tabs=['dashboard','logExp','logInc','history','monthly','charts','settings'];
+  const tabs=['dashboard','drafts','log','history','monthly','charts','settings'];
   document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
   if(name==='charts')setTimeout(renderCharts,50);
   if(name==='dashboard')setTimeout(renderDashCharts,50);
@@ -1681,11 +1681,11 @@ function parseAndAddDraft(){
   parsed.id=Date.now().toString();
   parsed.createdAt=new Date().toISOString();
   state.drafts.unshift(parsed);
-  document.getElementById('draftPasteBox').value='';
+  // Keep textarea content visible so user can re-reference or re-parse if needed
   saveData(false);
   refreshAll();
   switchTab('drafts');
-  showToast("Draft created — review below","success");
+  showToast("Draft created — review below. Tap Clear to remove the message above.","success");
 }
 
 function renderDrafts(){
@@ -1707,7 +1707,7 @@ function renderDrafts(){
     })[d.source]||'SMS';
     const dot=lvl=>`<span class="conf-dot conf-${lvl||'low'}" title="${lvl||'low'} confidence"></span>`;
     const photoBlock=d.photoId?`<div class="draft-photo" id="thumb_${d.id}" onclick="openImgModal('${d.photoId}')"><span class="draft-photo-loading">Loading…</span></div>`:'';
-    const rawBlock=d.sourceText?`<div class="draft-raw" onclick="this.classList.toggle('expanded')" title="Click to expand">${escapeHtml(d.sourceText)}</div>`:'';
+    const rawBlock=d.sourceText?`<div class="draft-raw" title="Original message">${escapeHtml(d.sourceText)}</div>`:'';
     return `<div class="draft-card" data-id="${d.id}">
       <div class="draft-card-head">
         <div style="flex:1;min-width:200px">
