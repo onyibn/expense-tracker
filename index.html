@@ -906,6 +906,12 @@ function setLogMode(mode){
 
 function onComboInputUnified(){onComboInput(logMode);}
 
+function refCodeExists(code, excludeId=''){
+  if(!code||!code.trim())return false;
+  const lc=code.trim().toLowerCase();
+  return [...state.expenses,...state.income].some(e=>e.id!==excludeId&&(e.refCode||'').trim().toLowerCase()===lc);
+}
+
 async function saveTransaction(){
   const date=document.getElementById('fDate').value;
   const cat=document.getElementById('fCategory').value.trim();
@@ -915,6 +921,8 @@ async function saveTransaction(){
   const editId=document.getElementById('fEditId').value;
   const editType=document.getElementById('fEditType').value;
   if(!date||!cat||!amt||amt<=0){showToast("Fill in Date, Category and Amount","error");return;}
+  if(refCode&&!editId&&refCodeExists(refCode)){showToast("Duplicate — Ref. Code already exists","error");return;}
+  if(refCode&&editId&&refCodeExists(refCode,editId)){showToast("Duplicate — Ref. Code already exists on another entry","error");return;}
 
   const btn=document.getElementById('btnSave');
   btn.disabled=true;
@@ -1221,51 +1229,36 @@ function renderHistory(){
   if(!data.length){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
 
-  // Group by type if showing both
-  let rows=[];
-  if(!ft){
-    const expenses=data.filter(e=>e.type==='expense');
-    const income=data.filter(e=>e.type==='income');
-    if(expenses.length)rows.push({header:'Expenses',items:expenses});
-    if(income.length)rows.push({header:'Income',items:income});
-  }else{
-    rows.push({header:null,items:data});
-  }
-
-  tbody.innerHTML=rows.map(group=>{
-    const headerRow=group.header?`<tr><td colspan="10" style="background:var(--surface);font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-muted);padding:8px 14px">${group.header}</td></tr>`:'';
-    const dataRows=group.items.map(e=>{
-      const isInc=e.type==='income';
-      const editFn=isInc?'editIncome':'editExpense';
-      let descCell=escapeHtml(e.description||'—');
-      const meta=[];
-      if(!isInc){
-        if(e.refCode)meta.push(`<span style="color:var(--info);font-size:11px">Ref: ${escapeHtml(e.refCode)}</span>`);
-        if(e.location)meta.push(`<span style="color:var(--mu);font-size:11px"><i class="ti ti-map-pin" style="font-size:10px"></i> ${escapeHtml(e.location)}</span>`);
-      }else{
-        if(e.refCode)meta.push(`<span style="color:var(--info);font-size:11px">Ref: ${escapeHtml(e.refCode)}</span>`);
-      }
-      if(meta.length)descCell=(e.description?escapeHtml(e.description)+'<br>':'')+meta.join(' &nbsp;·&nbsp; ');
-      const cbCell=massDeleteActive?`<td style="width:36px"><input type="checkbox" class="mass-cb row-cb" data-id="${e.id}" onchange="updateMassBar()"/></td>`:'';
-      return `<tr data-row-id="${e.id}">
-        ${cbCell}
-        <td>${fmtDate(e.date)}</td>
-        <td>${new Date(e.date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'short'})}</td>
-        <td>${isInc?'<span style="color:var(--info);font-weight:600">+ In</span>':'<span style="color:var(--danger);font-weight:600">− Out</span>'}</td>
-        <td class="cat-badge ${isInc?'income':''}"><span>${escapeHtml(e.category)}</span></td>
-        <td>${descCell}</td>
-        <td class="pay-method">${isInc?'—':escapeHtml(e.paymentMethod||'—')}</td>
-        <td class="amount" style="color:${isInc?'var(--accent)':'var(--ink)'}">${isInc?'+':''}${fmt(e.amount)}</td>
-        <td class="fee-cell">${isInc?'—':(e.txCost?fmt(e.txCost):'—')}</td>
-        <td class="act-btn">
-          ${e.photoId?`<button class="history-photo-btn" onclick="openImgModal('${e.photoId}')" title="View receipt photo"><i class="ti ti-photo"></i></button>`:''}
-          ${e.sourceText?`<button class="history-source-btn" onclick="toggleSourceRow('${e.id}')" title="View source SMS"><i class="ti ti-message"></i></button>`:''}
-          <button onclick="${editFn}('${e.id}')" title="Edit"><i class="ti ti-pencil"></i></button>
-          <button class="del" onclick="deleteTransaction('${e.id}','${e.type}')" title="Delete"><i class="ti ti-trash"></i></button>
-        </td>
-      </tr>${e.sourceText?`<tr id="src_${e.id}" style="display:none"><td colspan="${massDeleteActive?10:9}" class="source-row">${escapeHtml(e.sourceText)}</td></tr>`:''}`;
-    }).join('');
-    return headerRow+dataRows;
+  tbody.innerHTML=data.map(e=>{
+    const isInc=e.type==='income';
+    const editFn=isInc?'editIncome':'editExpense';
+    let descCell=escapeHtml(e.description||'—');
+    const meta=[];
+    if(!isInc){
+      if(e.refCode)meta.push(`<span style="color:var(--info);font-size:11px">Ref: ${escapeHtml(e.refCode)}</span>`);
+      if(e.location)meta.push(`<span style="color:var(--mu);font-size:11px"><i class="ti ti-map-pin" style="font-size:10px"></i> ${escapeHtml(e.location)}</span>`);
+    }else{
+      if(e.refCode)meta.push(`<span style="color:var(--info);font-size:11px">Ref: ${escapeHtml(e.refCode)}</span>`);
+    }
+    if(meta.length)descCell=(e.description?escapeHtml(e.description)+'<br>':'')+meta.join(' &nbsp;·&nbsp; ');
+    const cbCell=massDeleteActive?`<td style="width:36px"><input type="checkbox" class="mass-cb row-cb" data-id="${e.id}" onchange="updateMassBar()"/></td>`:'';
+    return `<tr data-row-id="${e.id}">
+      ${cbCell}
+      <td>${fmtDate(e.date)}</td>
+      <td>${new Date(e.date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'short'})}</td>
+      <td>${isInc?'<span style="color:var(--info);font-weight:600">+ In</span>':'<span style="color:var(--danger);font-weight:600">− Out</span>'}</td>
+      <td class="cat-badge ${isInc?'income':''}"><span>${escapeHtml(e.category)}</span></td>
+      <td>${descCell}</td>
+      <td class="pay-method">${isInc?'—':escapeHtml(e.paymentMethod||'—')}</td>
+      <td class="amount" style="color:${isInc?'var(--accent)':'var(--ink)'}">${isInc?'+':''}${fmt(e.amount)}</td>
+      <td class="fee-cell">${isInc?'—':(e.txCost?fmt(e.txCost):'—')}</td>
+      <td class="act-btn">
+        ${e.photoId?`<button class="history-photo-btn" onclick="openImgModal('${e.photoId}')" title="View receipt photo"><i class="ti ti-photo"></i></button>`:''}
+        ${e.sourceText?`<button class="history-source-btn" onclick="toggleSourceRow('${e.id}')" title="View source SMS"><i class="ti ti-message"></i></button>`:''}
+        <button onclick="${editFn}('${e.id}')" title="Edit"><i class="ti ti-pencil"></i></button>
+        <button class="del" onclick="deleteTransaction('${e.id}','${e.type}')" title="Delete"><i class="ti ti-trash"></i></button>
+      </td>
+    </tr>${e.sourceText?`<tr id="src_${e.id}" style="display:none"><td colspan="${massDeleteActive?10:9}" class="source-row">${escapeHtml(e.sourceText)}</td></tr>`:''}`;
   }).join('');
 }
 
@@ -1681,11 +1674,11 @@ function parseAndAddDraft(){
   parsed.id=Date.now().toString();
   parsed.createdAt=new Date().toISOString();
   state.drafts.unshift(parsed);
-  // Keep textarea content visible so user can re-reference or re-parse if needed
+  document.getElementById('draftPasteBox').value='';
   saveData(false);
   refreshAll();
   switchTab('drafts');
-  showToast("Draft created — review below. Tap Clear to remove the message above.","success");
+  showToast("Draft created — review below","success");
 }
 
 function renderDrafts(){
@@ -1762,6 +1755,7 @@ async function confirmDraft(id){
   const location=document.getElementById('dr_'+id+'_loc').value.trim();
   if(!date||!amount||amount<=0){showToast("Date and Amount are required","error");return;}
   if(!category){showToast("Pick a category","error");return;}
+  if(refCode&&refCodeExists(refCode)){showToast("Duplicate — Ref. Code already exists","error");return;}
   // Rename photo to a meaningful filename if one is attached
   let photoName=d.photoName||'';
   if(d.photoId){
