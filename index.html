@@ -355,13 +355,10 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
       <div class="kpi expense"><div class="kpi-label">This Month Expenses</div><div class="kpi-value" id="kpiExpense">Kshs 0</div><div class="kpi-sub" id="kpiExpenseSub">0 entries</div></div>
       <div class="kpi fees"><div class="kpi-label">Transaction Costs</div><div class="kpi-value" id="kpiFees">Kshs 0</div><div class="kpi-sub">leaked on fees</div></div>
       <div class="kpi net"><div class="kpi-label">Net Savings</div><div class="kpi-value" id="kpiNet">Kshs 0</div><div class="kpi-sub" id="kpiNetSub">income − expenses</div></div>
+      <div class="kpi" style="border-left-color:var(--mu2)"><div class="kpi-label">Total Balance</div><div class="kpi-value" id="kpiTotalBal">Kshs 0</div><div class="kpi-sub">across all accounts</div></div>
     </div>
 
-    <div class="section-title" style="margin-top:20px">Account Balances</div>
-    <div class="section-sub">Estimated balance per payment method. Set opening balances in Settings.</div>
-    <div class="bal-grid" id="balanceCards" style="margin-bottom:24px"></div>
-
-    <div class="section-title">Insights</div>
+    <div class="section-title" style="margin-top:8px">Insights</div>
     <div class="section-sub">Patterns from your recent activity.</div>
     <div class="insights-grid" id="insightsGrid"></div>
 
@@ -448,7 +445,7 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
     <div class="section-title">Transaction History</div>
     <div class="section-sub">All your logged expenses and income.</div>
     <div class="filters">
-      <select id="filterType" onchange="renderHistory()"><option value="">All transactions</option><option value="expense">Expenses only</option><option value="income">Income only</option></select>
+      <select id="filterType" onchange="renderHistory()"><option value="">All transactions</option><option value="expense">Expenses only</option><option value="income">Income only</option><option value="transfer">Transfers only</option></select>
       <select id="filterMonth" onchange="renderHistory()"><option value="">All months</option><option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option><option>May</option><option>Jun</option><option>Jul</option><option>Aug</option><option>Sep</option><option>Oct</option><option>Nov</option><option>Dec</option></select>
       <select id="filterCat" onchange="renderHistory()"><option value="">All categories</option></select>
       <input type="text" id="filterSearch" placeholder="Search description…" oninput="renderHistory()" style="min-width:200px"/>
@@ -522,13 +519,7 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
       <button class="btn-primary" onclick="saveTransfer()"><i class="ti ti-arrow-right-circle"></i> Record Transfer</button>
     </div>
 
-    <div class="section-title">Transfer History</div>
-    <div class="section-sub">Internal transfers between your accounts.</div>
-    <div class="table-wrap">
-      <table><thead><tr><th>Date</th><th>From</th><th>To</th><th>Amount</th><th>Tx Cost</th><th>Ref</th><th>Note</th><th></th></tr></thead>
-      <tbody id="transferBody"></tbody></table>
-    </div>
-    <div id="transferEmpty" class="empty" style="display:none"><div class="empty-icon"><i class="ti ti-arrows-exchange" style="font-size:32px;color:var(--mu2)"></i></div><p>No transfers recorded yet.</p></div>
+    <div style="font-size:12px;color:var(--mu);margin-top:8px"><i class="ti ti-info-circle"></i> Transfer history is visible in the <a href="#" onclick="switchTab('history');return false;" style="color:var(--info)">History tab</a> — filter by "Transfers only".</div>
   </div>
 
   <div class="page" id="tab-settings">
@@ -1333,7 +1324,7 @@ function computeBalances(){
 
 function renderBalances(){
   const wrap=document.getElementById('balanceCards');
-  if(!wrap)return;
+  if(!wrap)return; // removed from Dashboard — balances shown in Accounts tab
   const balances=computeBalances();
   const methods=Object.keys(balances).filter(m=>{
     const hasActivity=state.expenses.some(e=>e.paymentMethod===m)||state.income.some(i=>i.paymentMethod===m);
@@ -1434,6 +1425,11 @@ function renderKPIs(){
   document.getElementById('kpiFees').textContent=fmtShort(feeSum);
   document.getElementById('kpiNet').textContent=fmtShort(net);
   document.getElementById('kpiNet').style.color=net>=0?'var(--accent)':'var(--danger)';
+  // Total across all accounts
+  const balances=computeBalances();
+  const total=Object.values(balances).reduce((a,b)=>a+b,0);
+  const totalEl=document.getElementById('kpiTotalBal');
+  if(totalEl){totalEl.textContent=fmtShort(total);totalEl.style.color=total>=0?'var(--ink)':'var(--danger)';}
 }
 
 function renderDayPatternInsight(){
@@ -1559,23 +1555,31 @@ function renderHistory(){
   const fm=document.getElementById('filterMonth').value;
   const fc=document.getElementById('filterCat').value;
   const fs=document.getElementById('filterSearch').value.toLowerCase();
+
   let data=[];
-  if(!ft||ft==='expense')data=data.concat(state.expenses);
-  if(!ft||ft==='income')data=data.concat(state.income);
+  if(!ft||ft==='expense')data=data.concat(state.expenses.map(e=>({...e,type:'expense'})));
+  if(!ft||ft==='income')data=data.concat(state.income.map(i=>({...i,type:'income'})));
+  if(!ft||ft==='transfer')data=data.concat(state.transfers.map(t=>({...t,type:'transfer'})));
+
   data.sort((a,b)=>{
-    const cmp=a.date.localeCompare(b.date)||a.id.localeCompare(b.id);
+    const cmp=a.date.localeCompare(b.date)||(a.id||'').localeCompare(b.id||'');
     return histSortAsc?cmp:-cmp;
   });
+
   if(fm)data=data.filter(e=>MONTHS_SHORT[new Date(e.date+'T00:00:00').getMonth()]===fm);
-  if(fc)data=data.filter(e=>e.category===fc);
+  if(fc)data=data.filter(e=>e.category===fc); // transfers have no category; won't match
   if(fs)data=data.filter(e=>{
     const tagsJoined=Array.isArray(e.tags)?e.tags.join(' '):'';
     return (e.description||'').toLowerCase().includes(fs)||
-      e.category.toLowerCase().includes(fs)||
+      (e.category||'').toLowerCase().includes(fs)||
       (e.refCode||'').toLowerCase().includes(fs)||
       (e.location||'').toLowerCase().includes(fs)||
-      tagsJoined.toLowerCase().includes(fs);
+      tagsJoined.toLowerCase().includes(fs)||
+      (e.fromMethod||'').toLowerCase().includes(fs)||
+      (e.toMethod||'').toLowerCase().includes(fs)||
+      (e.note||'').toLowerCase().includes(fs);
   });
+
   const tbody=document.getElementById('historyBody');
   const empty=document.getElementById('historyEmpty');
   const bar=document.getElementById('massBar');
@@ -1588,16 +1592,33 @@ function renderHistory(){
   empty.style.display='none';
 
   tbody.innerHTML=data.map(e=>{
+    const isTransfer=e.type==='transfer';
     const isInc=e.type==='income';
+
+    if(isTransfer){
+      // Transfer row — special layout, no edit
+      const cbCell=massDeleteActive?`<td style="width:36px"><input type="checkbox" class="mass-cb row-cb" data-id="${e.id}" onchange="updateMassBar()"/></td>`:'';
+      const descCell=`<span style="font-weight:600">${escapeHtml(e.fromMethod)}</span> <i class="ti ti-arrow-right" style="font-size:11px;color:var(--mu)"></i> <span style="font-weight:600">${escapeHtml(e.toMethod)}</span>${e.note?'<br><span style="font-size:11px;color:var(--mu)">'+escapeHtml(e.note)+'</span>':''}${e.refCode?'<br><span style="color:var(--info);font-size:11px">Ref: '+escapeHtml(e.refCode)+'</span>':''}`;
+      return `<tr data-row-id="${e.id}">
+        ${cbCell}
+        <td>${fmtDate(e.date)}</td>
+        <td>${new Date(e.date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'short'})}</td>
+        <td><span style="color:var(--mu2);font-weight:600">⇄ Transfer</span></td>
+        <td class="cat-badge"><span style="background:#e8f0fb;color:var(--info)">Transfer</span></td>
+        <td>${descCell}</td>
+        <td class="pay-method" style="font-size:11px;color:var(--mu)">${escapeHtml(e.fromMethod)}</td>
+        <td class="amount" style="color:var(--mu)">${fmt(e.amount)}</td>
+        <td class="fee-cell">${e.txCost?fmt(e.txCost):'—'}</td>
+        <td class="act-btn"><button class="del" onclick="deleteTransfer('${e.id}')" title="Delete"><i class="ti ti-trash"></i></button></td>
+      </tr>`;
+    }
+
     const editFn=isInc?'editIncome':'editExpense';
     let descCell=escapeHtml(e.description||'—');
     const meta=[];
     if(e.refCode)meta.push(`<span style="color:var(--info);font-size:11px">Ref: ${escapeHtml(e.refCode)}</span>`);
-    // Tags as chips
     const chips=[];
-    if(Array.isArray(e.tags)&&e.tags.length){
-      e.tags.forEach(t=>chips.push(`<span class="tag-chip">${escapeHtml(t)}</span>`));
-    }
+    if(Array.isArray(e.tags)&&e.tags.length){e.tags.forEach(t=>chips.push(`<span class="tag-chip">${escapeHtml(t)}</span>`));}
     if(e.location){chips.push(`<span class="tag-chip legacy" title="Legacy location">${escapeHtml(e.location)}</span>`);}
     const chipsHtml=chips.length?`<div style="margin-top:4px">${chips.join('')}</div>`:'';
     if(meta.length||chipsHtml)descCell=(e.description?escapeHtml(e.description):'')+(meta.length?'<br>'+meta.join(' &nbsp;·&nbsp; '):'')+chipsHtml;
@@ -1784,7 +1805,7 @@ function switchTab(name){
   if(idx>=0&&navItems[idx])navItems[idx].classList.add('active');
   if(name==='charts')setTimeout(renderCharts,50);
   if(name==='dashboard')setTimeout(renderDashCharts,50);
-  if(name==='accounts'){renderAccounts();renderTransfers();}
+  if(name==='accounts'){renderAccounts();}
 }
 
 function fmtDate(d){return new Date(d+'T00:00:00').toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});}
@@ -2150,9 +2171,19 @@ function renderDrafts(){
         <div class="draft-field"><label>Tags</label><input type="text" id="dr_${d.id}_tags" value="${escapeAttr(tagsToString(d.tags))}" placeholder="comma-separated"/></div>
       </div>
       <div class="draft-actions">
-        <button class="btn-confirm" onclick="confirmDraft('${d.id}')"><i class="ti ti-check"></i> Confirm & Save</button>
+        <button class="btn-confirm" onclick="confirmDraft('${d.id}')"><i class="ti ti-check"></i> Confirm as Expense</button>
         <button class="btn-discard" onclick="discardDraft('${d.id}')">Discard</button>
-        ${d._isIncome?`<button onclick="confirmDraftAsIncome('${d.id}')" style="background:var(--info-lt);color:var(--info);border:none;padding:9px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500">Save as Income instead</button>`:''}
+        ${d._isIncome?`<button onclick="confirmDraftAsIncome('${d.id}')" style="background:var(--info-lt);color:var(--info);border:none;padding:9px 16px;border-radius:2px;font-size:12px;cursor:pointer;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Save as Income</button>`:''}
+        <button onclick="toggleDraftTransferPanel('${d.id}')" style="background:var(--hover);color:var(--ink);border:1px solid var(--bd);padding:9px 16px;border-radius:2px;font-size:12px;cursor:pointer;font-weight:700;letter-spacing:.06em;text-transform:uppercase"><i class="ti ti-arrows-exchange"></i> Save as Transfer</button>
+      </div>
+      <div id="dr_${d.id}_txfrPanel" style="display:none;margin-top:12px;padding:14px;background:var(--bg);border:1px solid var(--bd)">
+        <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Record as an account transfer</div>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end;margin-bottom:12px">
+          <div class="form-group"><label>From Account</label><select id="dr_${d.id}_txfrFrom">${state.paymentMethods.map(m=>`<option value="${escapeAttr(m)}">${escapeHtml(m)}</option>`).join('')}</select></div>
+          <div style="padding-bottom:11px;color:var(--mu)"><i class="ti ti-arrow-right"></i></div>
+          <div class="form-group"><label>To Account</label><select id="dr_${d.id}_txfrTo">${state.paymentMethods.map(m=>`<option value="${escapeAttr(m)}">${escapeHtml(m)}</option>`).join('')}</select></div>
+        </div>
+        <button onclick="confirmDraftAsTransfer('${d.id}')" class="btn-primary" style="font-size:12px;padding:9px 18px"><i class="ti ti-check"></i> Confirm Transfer</button>
       </div>
     </div>`;
   }).join('');
@@ -2211,6 +2242,34 @@ async function confirmDraftAsIncome(id){
   showToast(`Income saved — Kshs ${fmtNum(amount)}`,"success");
 }
 
+function toggleDraftTransferPanel(id){
+  const panel=document.getElementById('dr_'+id+'_txfrPanel');
+  if(panel)panel.style.display=panel.style.display==='none'?'block':'none';
+}
+
+async function confirmDraftAsTransfer(id){
+  const d=state.drafts.find(x=>x.id===id);if(!d)return;
+  const date=document.getElementById('dr_'+id+'_date').value;
+  const amount=parseFloat(document.getElementById('dr_'+id+'_amount').value)||0;
+  const txCost=parseFloat(document.getElementById('dr_'+id+'_tx').value)||0;
+  const refCode=document.getElementById('dr_'+id+'_ref').value.trim();
+  const fromMethod=document.getElementById('dr_'+id+'_txfrFrom').value;
+  const toMethod=document.getElementById('dr_'+id+'_txfrTo').value;
+  if(!date||amount<=0){showToast("Date and Amount are required","error");return;}
+  if(!fromMethod||!toMethod){showToast("Select both accounts","error");return;}
+  if(fromMethod===toMethod){showToast("From and To must be different","error");return;}
+  const note=document.getElementById('dr_'+id+'_desc')?.value.trim()||'';
+  state.transfers.push({
+    id:Date.now().toString(),fromMethod,toMethod,date,amount,txCost,
+    refCode,note,sourceText:d.sourceText||'',
+    createdAt:new Date().toISOString()
+  });
+  state.drafts=state.drafts.filter(x=>x.id!==id);
+  await saveData(false);
+  refreshAll();
+  showToast(`Transfer recorded — ${fmt(amount)} from ${fromMethod} to ${toMethod}`,"success");
+}
+
 async function discardDraft(id){
   if(!confirm("Discard this draft?"))return;
   const d=state.drafts.find(x=>x.id===id);
@@ -2259,24 +2318,7 @@ function renderAccounts(){
   ['txfrFrom','txfrTo'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
 }
 
-function renderTransfers(){
-  const tbody=document.getElementById('transferBody');
-  const empty=document.getElementById('transferEmpty');
-  if(!tbody)return;
-  const sorted=[...state.transfers].sort((a,b)=>b.date.localeCompare(a.date));
-  if(!sorted.length){tbody.innerHTML='';if(empty)empty.style.display='block';return;}
-  if(empty)empty.style.display='none';
-  tbody.innerHTML=sorted.map(t=>`<tr>
-    <td>${fmtDate(t.date)}</td>
-    <td>${escapeHtml(t.fromMethod)}</td>
-    <td>${escapeHtml(t.toMethod)}</td>
-    <td class="amount">${fmt(t.amount)}</td>
-    <td class="fee-cell">${t.txCost?fmt(t.txCost):'—'}</td>
-    <td>${escapeHtml(t.refCode||'—')}</td>
-    <td>${escapeHtml(t.note||'—')}</td>
-    <td><button class="del" onclick="deleteTransfer('${t.id}')" title="Delete"><i class="ti ti-trash"></i></button></td>
-  </tr>`).join('');
-}
+// Transfer history is rendered via renderHistory() with filter type='transfer'
 
 function openAddAccount(){
   document.getElementById('acctEditOldName').value='';
@@ -2361,8 +2403,8 @@ async function saveTransfer(){
   ['txfrAmount','txfrCost','txfrRef','txfrNote'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   await saveData(false);
   renderAccounts();
-  renderTransfers();
-  renderBalances(); // update Dashboard cards too
+  renderHistory(); // refresh history tab (transfers show there)
+  renderBalances();
   showToast(`Transfer recorded — ${fmt(amount)} from ${fromMethod} to ${toMethod}`,"success");
 }
 
@@ -2371,7 +2413,7 @@ async function deleteTransfer(id){
   state.transfers=state.transfers.filter(t=>t.id!==id);
   await saveData(false);
   renderAccounts();
-  renderTransfers();
+  renderHistory();
   renderBalances();
   showToast("Transfer deleted","success");
 }
