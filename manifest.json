@@ -1,0 +1,19 @@
+{
+  "name": "Onyiego Expense Tracker",
+  "short_name": "Onyiego",
+  "description": "Personal expense tracker with M-Pesa SMS parsing and OneDrive sync",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fafaf8",
+  "theme_color": "#CC0000",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

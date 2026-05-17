@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#CC0000"/>
+  <text x="256" y="256"
+        text-anchor="middle"
+        dominant-baseline="central"
+        font-family="'Lato','Arial Black',Arial,sans-serif"
+        font-weight="900"
+        font-size="200"
+        fill="#FFFFFF"
+        letter-spacing="-8">OE</text>
+</svg>

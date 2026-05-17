@@ -4,6 +4,13 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Onyiego Expense Tracker</title>
+<link rel="manifest" href="./manifest.json"/>
+<meta name="theme-color" content="#CC0000"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Onyiego"/>
+<link rel="apple-touch-icon" href="./icon.svg"/>
+<link rel="icon" href="./icon.svg"/>
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.5.0/dist/tabler-icons.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -226,6 +233,25 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
 /* QUICK BTNS */
 #quickBtns button{background:var(--surface);border:1px solid var(--bd);color:var(--text);padding:7px 14px;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;border-radius:2px}
 #quickBtns button:hover{border-color:var(--r);color:var(--r);background:var(--accent-lt)}
+/* INSIGHTS */
+.insights-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:20px}
+.insight-card{background:var(--surface);border:1px solid var(--bd);padding:14px 16px;border-left:3px solid var(--info)}
+.ic-label{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px}
+.ic-value{font-size:18px;font-weight:900;color:var(--ink);line-height:1.2;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.ic-sub{font-size:11px;color:var(--mu2);margin-top:4px}
+/* BALANCES */
+.bal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.bal-card{background:var(--surface);border:1px solid var(--bd);padding:14px 16px;border-left:3px solid var(--ok)}
+.bal-card.neg{border-left-color:var(--danger)}
+.bal-label{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px}
+.bal-value{font-size:18px;font-weight:900;color:var(--ink);line-height:1.2;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.bal-sub{font-size:10px;color:var(--mu2);margin-top:4px}
+.bal-empty{font-size:12px;color:var(--mu);font-style:italic;padding:8px 0}
+/* TAG CHIPS */
+.tag-chip{display:inline-block;padding:2px 8px;font-size:10px;font-weight:700;background:var(--bg);border:1px solid var(--bd);color:var(--mu);border-radius:10px;margin-right:4px;margin-top:2px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.tag-chip.legacy{background:#fdf5e6;color:#8a5a00;border-color:#e8d5a8}
+/* OPENING BALANCE INPUT */
+.ob-input{width:130px;padding:6px 10px;font-size:13px;text-align:right;border:1px solid var(--bd);border-radius:2px;font-family:'Lato',sans-serif;font-variant-numeric:tabular-nums}
 @media(max-width:640px){
   .form-grid{grid-template-columns:1fr}
   .charts-grid{grid-template-columns:1fr}
@@ -283,6 +309,15 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
       <div class="kpi fees"><div class="kpi-label">Transaction Costs</div><div class="kpi-value" id="kpiFees">Kshs 0</div><div class="kpi-sub">leaked on fees</div></div>
       <div class="kpi net"><div class="kpi-label">Net Savings</div><div class="kpi-value" id="kpiNet">Kshs 0</div><div class="kpi-sub" id="kpiNetSub">income − expenses</div></div>
     </div>
+
+    <div class="section-title" style="margin-top:20px">Account Balances</div>
+    <div class="section-sub">Estimated balance per payment method. Set opening balances in Settings.</div>
+    <div class="bal-grid" id="balanceCards" style="margin-bottom:24px"></div>
+
+    <div class="section-title">Insights</div>
+    <div class="section-sub">Patterns from your recent activity.</div>
+    <div class="insights-grid" id="insightsGrid"></div>
+
     <div id="dayPatternInsight"></div>
     <div class="charts-grid">
       <div class="chart-card"><h3>This Month by Category</h3><div class="chart-wrap"><canvas id="chartDashPie"></canvas></div></div>
@@ -339,13 +374,13 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
           </div>
         </div>
         <div class="form-group"><label>Amount (Kshs)</label><input type="number" id="fAmount" placeholder="0" min="0" step="0.50"/></div>
-        <div class="form-group expense-only"><label>Payment Method</label><select id="fPayment"></select></div>
+        <div class="form-group"><label>Payment Method</label><select id="fPayment"></select></div>
         <div class="form-group expense-only"><label>Transaction Cost (Kshs)</label><input type="number" id="fTxCost" placeholder="0" min="0" step="0.50"/></div>
         <div class="form-group"><label>Ref. Code <span style="color:var(--mu);font-weight:400">(optional)</span></label><input type="text" id="fRefCode" placeholder="e.g. M-Pesa code, receipt no."/></div>
-        <div class="form-group expense-only"><label>Location <span style="color:var(--mu);font-weight:400">(optional)</span></label>
+        <div class="form-group full expense-only"><label>Tags <span style="color:var(--mu);font-weight:400">(comma-separated, optional)</span></label>
           <div class="has-suggest">
-            <input type="text" id="fLocation" placeholder="e.g. Java Westlands, Naivas Ngong Rd" autocomplete="off" oninput="onSuggestInput('fLocation','location')" onblur="setTimeout(()=>hideSuggest('fLocation'),200)"/>
-            <div class="suggest-list" id="fLocationSuggest" style="display:none"></div>
+            <input type="text" id="fTags" placeholder="e.g. Client-XYZ, Trip-Mombasa, Westlands" autocomplete="off" oninput="onSuggestInput('fTags','tags')" onblur="setTimeout(()=>hideSuggest('fTags'),200)"/>
+            <div class="suggest-list" id="fTagsSuggest" style="display:none"></div>
           </div>
         </div>
         <div class="form-group full" style="align-self:end;display:flex;gap:10px;flex-wrap:wrap">
@@ -424,6 +459,11 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
         </div>
         <label class="toggle-switch"><input type="checkbox" id="massDeleteToggle" onchange="toggleMassDelete(this.checked)"/><span class="toggle-knob"></span></label>
       </div>
+    </div>
+    <div class="card manage-section">
+      <div class="card-title" style="margin-bottom:8px">Opening Balances</div>
+      <div style="font-size:12px;color:var(--mu);margin-bottom:14px">Starting balance for each payment method. Running balances on the Dashboard = opening + income − expenses.</div>
+      <div id="manageBalances"></div>
     </div>
     <div class="card manage-section">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
@@ -515,7 +555,8 @@ let state={
   expenses:[],income:[],drafts:[],
   expenseCats:JSON.parse(JSON.stringify(DEFAULT_EXPENSE_CATS)),
   incomeCats:JSON.parse(JSON.stringify(DEFAULT_INCOME_CATS)),
-  paymentMethods:[...DEFAULT_PAYMENT_METHODS]
+  paymentMethods:[...DEFAULT_PAYMENT_METHODS],
+  openingBalances:{}
 };
 
 const MONTHS_SHORT=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -530,6 +571,15 @@ function thisMonth(){return new Date().getMonth();}
 function thisYear(){return new Date().getFullYear();}
 function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function escapeAttr(s){return String(s==null?'':s).replace(/'/g,"\\'").replace(/"/g,'&quot;');}
+function parseTags(s){return (s||'').split(',').map(t=>t.trim()).filter(Boolean);}
+function tagsToString(arr){return (arr||[]).join(', ');}
+function allKnownTags(){
+  const set=new Set();
+  for(const e of state.expenses){
+    if(Array.isArray(e.tags))e.tags.forEach(t=>set.add(t));
+  }
+  return [...set].sort();
+}
 
 function loadMSAL(){
   return new Promise((resolve,reject)=>{
@@ -557,6 +607,14 @@ async function initMSAL(){
   msalInstance=new msal.PublicClientApplication(msalConfig);
   await msalInstance.initialize();
   try{
+    // Handle the redirect response first (when coming back from Microsoft sign-in)
+    const resp=await msalInstance.handleRedirectPromise();
+    if(resp&&resp.account){
+      account=resp.account;
+      await onSignedIn();
+      return;
+    }
+    // Otherwise check for cached account
     const accounts=msalInstance.getAllAccounts();
     if(accounts.length>0){account=accounts[0];await onSignedIn();}
   }catch(e){console.error(e);}
@@ -567,12 +625,11 @@ async function signIn(){
   catch(e){showToast("Could not load auth library.","error");return;}
   if(!msalInstance) await initMSAL();
   try{
-    const resp=await msalInstance.loginPopup({scopes:SCOPES});
-    account=resp.account;
-    await onSignedIn();
+    await msalInstance.loginRedirect({scopes:SCOPES});
+    // Page will navigate to Microsoft; control returns via handleRedirectPromise
   }catch(e){
     console.error("Login error:",e);
-    showToast("Sign in failed — "+(e.message||"please allow popups"),"error");
+    showToast("Sign in failed — "+(e.message||"try again"),"error");
   }
 }
 
@@ -583,8 +640,9 @@ async function getToken(){
     const r=await msalInstance.acquireTokenSilent({scopes:SCOPES,account});
     return r.accessToken;
   }catch{
-    const r=await msalInstance.acquireTokenPopup({scopes:SCOPES});
-    return r.accessToken;
+    // Silent failed — redirect for re-auth
+    await msalInstance.acquireTokenRedirect({scopes:SCOPES});
+    throw new Error("Redirecting for re-authentication");
   }
 }
 
@@ -610,20 +668,60 @@ async function gFetch(url,opts={}){
 }
 
 async function ensureFolder(){
-  try{const r=await gFetch(`/me/drive/root:/${encodeURI(FOLDER)}`);return r.id;}catch{}
+  // Try direct path lookup first
+  try{const r=await gFetch(`/me/drive/root:/${encodeURI(FOLDER)}`);return r.id;}
+  catch(e){
+    // Only create if truly not found — don't create on transient network errors
+    const msg=String(e.message||'');
+    if(!msg.includes('itemNotFound')&&!/\b404\b/.test(msg))throw e;
+  }
+  // Folder doesn't exist — create the hierarchy
   const parts=FOLDER.split('/');
   let parentPath='',parentId=null;
   for(const part of parts){
     const fullPath=parentPath?parentPath+'/'+part:part;
     try{const r=await gFetch(`/me/drive/root:/${encodeURI(fullPath)}`);parentId=r.id;}
-    catch{
+    catch(e){
+      const msg=String(e.message||'');
+      if(!msg.includes('itemNotFound')&&!/\b404\b/.test(msg))throw e;
       const url=parentPath?`/me/drive/root:/${encodeURI(parentPath)}:/children`:'/me/drive/root/children';
-      const r=await gFetch(url,{method:'POST',body:JSON.stringify({name:part,folder:{},['@microsoft.graph.conflictBehavior']:'rename'})});
-      parentId=r.id;
+      try{
+        const r=await gFetch(url,{method:'POST',body:JSON.stringify({name:part,folder:{},['@microsoft.graph.conflictBehavior']:'fail'})});
+        parentId=r.id;
+      }catch(createErr){
+        // Race condition — folder appeared between our check and create; refetch
+        const r=await gFetch(`/me/drive/root:/${encodeURI(fullPath)}`);
+        parentId=r.id;
+      }
     }
     parentPath=fullPath;
   }
   return parentId;
+}
+
+function cacheState(){
+  try{localStorage.setItem('onyiego_cache',JSON.stringify({
+    expenses:state.expenses,income:state.income,drafts:state.drafts,
+    expenseCats:state.expenseCats,incomeCats:state.incomeCats,
+    paymentMethods:state.paymentMethods,openingBalances:state.openingBalances,
+    cachedAt:new Date().toISOString()
+  }));}catch{}
+}
+
+function loadCachedState(){
+  try{
+    const s=localStorage.getItem('onyiego_cache');
+    if(!s)return false;
+    const j=JSON.parse(s);
+    if(j.expenses)state.expenses=j.expenses;
+    if(j.income)state.income=j.income;
+    if(j.drafts)state.drafts=j.drafts;
+    if(j.expenseCats)state.expenseCats=j.expenseCats;
+    if(j.incomeCats)state.incomeCats=j.incomeCats;
+    if(j.paymentMethods)state.paymentMethods=j.paymentMethods;
+    if(j.openingBalances)state.openingBalances=j.openingBalances;
+    return true;
+  }catch{return false;}
 }
 
 async function loadData(){
@@ -641,24 +739,34 @@ async function loadData(){
         id:e.id,date:e.date,category:e.category,description:e.description||'',
         amount:e.amount,paymentMethod:e.paymentMethod||'',
         txCost:typeof e.txCost==='number'?e.txCost:0,
-        refCode:e.refCode||'',location:e.location||'',
+        refCode:e.refCode||'',
+        location:e.location||'',
+        tags:Array.isArray(e.tags)?e.tags:[],
         sourceText:e.sourceText||'',photoId:e.photoId||'',photoName:e.photoName||'',
         type:'expense'
       }));
       state.income=(json.income||[]).map(i=>({
         id:i.id,date:i.date,category:i.category,description:i.description||'',
-        amount:i.amount,refCode:i.refCode||'',type:'income'
+        amount:i.amount,refCode:i.refCode||'',
+        paymentMethod:i.paymentMethod||'',
+        type:'income'
       }));
       if(json.expenseCats)state.expenseCats=json.expenseCats;
       if(json.incomeCats)state.incomeCats=json.incomeCats;
       if(json.paymentMethods)state.paymentMethods=json.paymentMethods;
       if(json.drafts)state.drafts=json.drafts;
+      if(json.openingBalances)state.openingBalances=json.openingBalances;
+      cacheState();
     }else{
       await saveData(false);
     }
   }catch(e){
     console.error(e);
-    showToast("Could not load from OneDrive.","error");
+    if(loadCachedState()){
+      showToast("Offline — loaded from local cache","warn");
+    }else{
+      showToast("Could not load from OneDrive.","error");
+    }
   }
   hideStatus();
 }
@@ -671,6 +779,7 @@ async function saveData(notify=true){
       expenses:state.expenses,income:state.income,drafts:state.drafts,
       expenseCats:state.expenseCats,incomeCats:state.incomeCats,
       paymentMethods:state.paymentMethods,
+      openingBalances:state.openingBalances,
       lastUpdated:new Date().toISOString()
     });
     if(driveFileId){
@@ -679,10 +788,12 @@ async function saveData(notify=true){
       const r=await fetch(`${GRAPH}/me/drive/items/${folderId}:/${encodeURIComponent(FILE_NAME)}:/content`,{method:'PUT',headers:{Authorization:`Bearer ${await getToken()}`,'Content-Type':'application/json'},body});
       const j=await r.json();driveFileId=j.id;
     }
+    cacheState();
     if(notify)showToast("Saved to OneDrive ✓","success");
   }catch(e){
     console.error(e);
-    showToast("Save failed — check connection","error");
+    cacheState();
+    showToast("Save failed — saved locally, will retry when online","error");
   }
   hideStatus();
 }
@@ -931,7 +1042,7 @@ async function saveTransaction(){
   if(logMode==='expense'){
     const pay=document.getElementById('fPayment').value;
     const tx=parseFloat(document.getElementById('fTxCost').value)||0;
-    const location=document.getElementById('fLocation').value.trim();
+    const tags=parseTags(document.getElementById('fTags').value);
     const all=flattenCats(state.expenseCats);
     if(!all.some(x=>x.cat===cat)){
       if(!state.expenseCats["Other"])state.expenseCats["Other"]=[];
@@ -943,17 +1054,19 @@ async function saveTransaction(){
         const old=state.expenses[idx];
         state.expenses[idx]={
           id:editId,date,category:cat,description:desc,amount:amt,
-          paymentMethod:pay,txCost:tx,refCode,location,
+          paymentMethod:pay,txCost:tx,refCode,tags,
+          location:old.location||'',
           sourceText:old.sourceText||'',photoId:old.photoId||'',photoName:old.photoName||'',
           type:'expense'
         };
       }
       showToast(`Updated — Kshs ${fmtNum(amt)}`,"success");
     }else{
-      state.expenses.push({id:Date.now().toString(),date,category:cat,description:desc,amount:amt,paymentMethod:pay,txCost:tx,refCode,location,sourceText:'',photoId:'',photoName:'',type:'expense'});
+      state.expenses.push({id:Date.now().toString(),date,category:cat,description:desc,amount:amt,paymentMethod:pay,txCost:tx,refCode,tags,location:'',sourceText:'',photoId:'',photoName:'',type:'expense'});
       showToast(`Saved — Kshs ${fmtNum(amt)}`,"success");
     }
   }else{
+    const pay=document.getElementById('fPayment').value;
     const all=flattenCats(state.incomeCats);
     if(!all.some(x=>x.cat===cat)){
       if(!state.incomeCats["Other"])state.incomeCats["Other"]=[];
@@ -961,10 +1074,10 @@ async function saveTransaction(){
     }
     if(editId&&editType==='income'){
       const idx=state.income.findIndex(i=>i.id===editId);
-      if(idx>-1)state.income[idx]={id:editId,date,category:cat,description:desc,amount:amt,refCode,type:'income'};
+      if(idx>-1)state.income[idx]={id:editId,date,category:cat,description:desc,amount:amt,refCode,paymentMethod:pay,type:'income'};
       showToast(`Updated — Kshs ${fmtNum(amt)}`,"success");
     }else{
-      state.income.push({id:Date.now().toString(),date,category:cat,description:desc,amount:amt,refCode,type:'income'});
+      state.income.push({id:Date.now().toString(),date,category:cat,description:desc,amount:amt,refCode,paymentMethod:pay,type:'income'});
       showToast(`Saved — Kshs ${fmtNum(amt)}`,"success");
     }
   }
@@ -986,14 +1099,16 @@ function editExpense(id){
   document.getElementById('fPayment').value=e.paymentMethod||'';
   document.getElementById('fTxCost').value=e.txCost||'';
   document.getElementById('fRefCode').value=e.refCode||'';
-  document.getElementById('fLocation').value=e.location||'';
+  // Migrate legacy location into tags display
+  let tagsStr=tagsToString(e.tags);
+  if(!tagsStr&&e.location)tagsStr=e.location;
+  document.getElementById('fTags').value=tagsStr;
   document.getElementById('fEditId').value=e.id;
   document.getElementById('fEditType').value='expense';
   document.getElementById('logTitle').textContent='Edit Expense';
   document.getElementById('logSub').textContent='Update the details below and click Save.';
   document.getElementById('saveLabel').textContent='Update Expense';
   document.getElementById('btnCancelEdit').style.display='block';
-  // Disable mode toggle during edit
   document.querySelectorAll('.mode-btn').forEach(b=>b.disabled=true);
   switchTab('log');
   window.scrollTo({top:0,behavior:'smooth'});
@@ -1008,6 +1123,7 @@ function editIncome(id){
   document.getElementById('fDesc').value=i.description||'';
   document.getElementById('fAmount').value=i.amount;
   document.getElementById('fRefCode').value=i.refCode||'';
+  document.getElementById('fPayment').value=i.paymentMethod||'';
   document.getElementById('fEditId').value=i.id;
   document.getElementById('fEditType').value='income';
   document.getElementById('logTitle').textContent='Edit Income';
@@ -1027,14 +1143,13 @@ function cancelEditUnified(){
   document.getElementById('fPayment').value='';
   document.getElementById('fTxCost').value='';
   document.getElementById('fRefCode').value='';
-  document.getElementById('fLocation').value='';
+  document.getElementById('fTags').value='';
   document.getElementById('fEditId').value='';
   document.getElementById('fEditType').value='';
   document.getElementById('logTitle').textContent='Log a Transaction';
   document.getElementById('logSub').textContent='Pick a mode below, then fill the form.';
   document.getElementById('btnCancelEdit').style.display='none';
   document.querySelectorAll('.mode-btn').forEach(b=>b.disabled=false);
-  // Reset to expense mode by default after cancel
   setLogMode('expense');
 }
 
@@ -1054,6 +1169,8 @@ function setDefaultDates(){
 
 function refreshAll(){
   renderKPIs();
+  renderBalances();
+  renderInsights();
   renderDayPatternInsight();
   renderDashCharts();
   renderHistory();
@@ -1063,9 +1180,138 @@ function refreshAll(){
   renderMonthDetail();
   renderCharts();
   renderManageLists();
+  renderBalancesSettings();
   populateFilterCats();
   buildPaymentMethodSelect();
   buildQuickBtns();
+}
+
+function computeBalances(){
+  const result={};
+  for(const m of state.paymentMethods){
+    result[m]=parseFloat(state.openingBalances[m])||0;
+  }
+  for(const e of state.expenses){
+    if(e.paymentMethod){
+      if(result[e.paymentMethod]==null)result[e.paymentMethod]=parseFloat(state.openingBalances[e.paymentMethod])||0;
+      result[e.paymentMethod]=result[e.paymentMethod]-e.amount-(e.txCost||0);
+    }
+  }
+  for(const i of state.income){
+    if(i.paymentMethod){
+      if(result[i.paymentMethod]==null)result[i.paymentMethod]=parseFloat(state.openingBalances[i.paymentMethod])||0;
+      result[i.paymentMethod]=result[i.paymentMethod]+i.amount;
+    }
+  }
+  return result;
+}
+
+function renderBalances(){
+  const wrap=document.getElementById('balanceCards');
+  if(!wrap)return;
+  const balances=computeBalances();
+  const methods=Object.keys(balances).filter(m=>{
+    const hasActivity=state.expenses.some(e=>e.paymentMethod===m)||state.income.some(i=>i.paymentMethod===m);
+    const hasOpening=state.openingBalances[m]&&parseFloat(state.openingBalances[m])!==0;
+    return hasActivity||hasOpening;
+  });
+  if(!methods.length){
+    wrap.innerHTML='<div class="bal-empty">Set opening balances in Settings, or log a transaction with a payment method, to see running balances.</div>';
+    return;
+  }
+  wrap.innerHTML=methods.map(m=>{
+    const bal=balances[m];
+    const neg=bal<0;
+    return `<div class="bal-card${neg?' neg':''}">
+      <div class="bal-label">${escapeHtml(m)}</div>
+      <div class="bal-value" style="color:${neg?'var(--danger)':'var(--ink)'}">${fmt(bal)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderInsights(){
+  const wrap=document.getElementById('insightsGrid');
+  if(!wrap)return;
+  const tm=thisMonth(),ty=thisYear();
+  const lastTm=tm===0?11:tm-1;
+  const lastTy=tm===0?ty-1:ty;
+  const monthExp=state.expenses.filter(e=>{const d=new Date(e.date+'T00:00:00');return d.getMonth()===tm&&d.getFullYear()===ty;});
+  const monthInc=state.income.filter(i=>{const d=new Date(i.date+'T00:00:00');return d.getMonth()===tm&&d.getFullYear()===ty;});
+  const lastMonthExp=state.expenses.filter(e=>{const d=new Date(e.date+'T00:00:00');return d.getMonth()===lastTm&&d.getFullYear()===lastTy;});
+
+  // Top category
+  const catMap={};
+  monthExp.forEach(e=>{catMap[e.category]=(catMap[e.category]||0)+e.amount+(e.txCost||0);});
+  const totalExp=Object.values(catMap).reduce((a,b)=>a+b,0);
+  const topCat=Object.entries(catMap).sort((a,b)=>b[1]-a[1])[0];
+  const topCatHtml=topCat&&totalExp>0
+    ?`<div class="ic-value">${escapeHtml(topCat[0])}</div><div class="ic-sub">${fmtShort(topCat[1])} · ${(topCat[1]/totalExp*100).toFixed(0)}% of spend</div>`
+    :`<div class="ic-value" style="color:var(--mu)">—</div><div class="ic-sub">No spend yet this month</div>`;
+
+  // Vs last month
+  const thisSum=monthExp.reduce((a,e)=>a+e.amount+(e.txCost||0),0);
+  const lastSum=lastMonthExp.reduce((a,e)=>a+e.amount+(e.txCost||0),0);
+  let trendHtml;
+  if(lastSum>0){
+    const pct=((thisSum-lastSum)/lastSum*100);
+    const sign=pct>=0?'↑':'↓';
+    const col=pct>=0?'var(--danger)':'var(--ok)';
+    trendHtml=`<div class="ic-value" style="color:${col}">${sign} ${Math.abs(pct).toFixed(0)}%</div><div class="ic-sub">vs last month (${fmtShort(lastSum)})</div>`;
+  }else if(thisSum>0){
+    trendHtml=`<div class="ic-value">${fmtShort(thisSum)}</div><div class="ic-sub">No spend last month to compare</div>`;
+  }else{
+    trendHtml=`<div class="ic-value" style="color:var(--mu)">—</div><div class="ic-sub">No data yet</div>`;
+  }
+
+  // Savings rate
+  const incSum=monthInc.reduce((a,i)=>a+i.amount,0);
+  let savingsHtml;
+  if(incSum>0){
+    const rate=((incSum-thisSum)/incSum*100);
+    const col=rate>=0?'var(--ok)':'var(--danger)';
+    savingsHtml=`<div class="ic-value" style="color:${col}">${rate.toFixed(0)}%</div><div class="ic-sub">${fmtShort(incSum-thisSum)} saved this month</div>`;
+  }else{
+    savingsHtml=`<div class="ic-value" style="color:var(--mu)">—</div><div class="ic-sub">Log income to see savings rate</div>`;
+  }
+
+  // Highest single expense this month
+  const topExpense=[...monthExp].sort((a,b)=>(b.amount+(b.txCost||0))-(a.amount+(a.txCost||0)))[0];
+  let topExpHtml;
+  if(topExpense){
+    const lbl=topExpense.description||topExpense.category;
+    topExpHtml=`<div class="ic-value">${fmtShort(topExpense.amount+(topExpense.txCost||0))}</div><div class="ic-sub">${escapeHtml(lbl).slice(0,40)} · ${fmtDate(topExpense.date)}</div>`;
+  }else{
+    topExpHtml=`<div class="ic-value" style="color:var(--mu)">—</div><div class="ic-sub">No expenses yet</div>`;
+  }
+
+  wrap.innerHTML=`
+    <div class="insight-card"><div class="ic-label">Top Category</div>${topCatHtml}</div>
+    <div class="insight-card"><div class="ic-label">Vs Last Month</div>${trendHtml}</div>
+    <div class="insight-card"><div class="ic-label">Savings Rate</div>${savingsHtml}</div>
+    <div class="insight-card"><div class="ic-label">Biggest Expense</div>${topExpHtml}</div>
+  `;
+}
+
+function renderBalancesSettings(){
+  const wrap=document.getElementById('manageBalances');
+  if(!wrap)return;
+  if(!state.paymentMethods.length){wrap.innerHTML='<div class="manage-empty">No payment methods — add one below first</div>';return;}
+  wrap.innerHTML=state.paymentMethods.map(m=>{
+    const bal=state.openingBalances[m]||0;
+    const safeId='ob_'+m.replace(/[^a-zA-Z0-9]/g,'_');
+    return `<div class="manage-row">
+      <span>${escapeHtml(m)}</span>
+      <span><input type="number" step="0.50" class="ob-input" id="${safeId}" value="${bal}" onchange="setOpeningBalance('${escapeAttr(m)}',this.value)"/></span>
+    </div>`;
+  }).join('');
+}
+
+async function setOpeningBalance(method,value){
+  const v=parseFloat(value)||0;
+  state.openingBalances[method]=v;
+  await saveData(false);
+  renderBalances();
+  showToast(`Opening balance for ${method} set to ${fmt(v)}`,"success");
 }
 
 function renderKPIs(){
@@ -1217,7 +1463,14 @@ function renderHistory(){
   });
   if(fm)data=data.filter(e=>MONTHS_SHORT[new Date(e.date+'T00:00:00').getMonth()]===fm);
   if(fc)data=data.filter(e=>e.category===fc);
-  if(fs)data=data.filter(e=>(e.description||'').toLowerCase().includes(fs)||e.category.toLowerCase().includes(fs)||(e.refCode||'').toLowerCase().includes(fs)||(e.location||'').toLowerCase().includes(fs));
+  if(fs)data=data.filter(e=>{
+    const tagsJoined=Array.isArray(e.tags)?e.tags.join(' '):'';
+    return (e.description||'').toLowerCase().includes(fs)||
+      e.category.toLowerCase().includes(fs)||
+      (e.refCode||'').toLowerCase().includes(fs)||
+      (e.location||'').toLowerCase().includes(fs)||
+      tagsJoined.toLowerCase().includes(fs);
+  });
   const tbody=document.getElementById('historyBody');
   const empty=document.getElementById('historyEmpty');
   const bar=document.getElementById('massBar');
@@ -1234,13 +1487,15 @@ function renderHistory(){
     const editFn=isInc?'editIncome':'editExpense';
     let descCell=escapeHtml(e.description||'—');
     const meta=[];
-    if(!isInc){
-      if(e.refCode)meta.push(`<span style="color:var(--info);font-size:11px">Ref: ${escapeHtml(e.refCode)}</span>`);
-      if(e.location)meta.push(`<span style="color:var(--mu);font-size:11px"><i class="ti ti-map-pin" style="font-size:10px"></i> ${escapeHtml(e.location)}</span>`);
-    }else{
-      if(e.refCode)meta.push(`<span style="color:var(--info);font-size:11px">Ref: ${escapeHtml(e.refCode)}</span>`);
+    if(e.refCode)meta.push(`<span style="color:var(--info);font-size:11px">Ref: ${escapeHtml(e.refCode)}</span>`);
+    // Tags as chips
+    const chips=[];
+    if(Array.isArray(e.tags)&&e.tags.length){
+      e.tags.forEach(t=>chips.push(`<span class="tag-chip">${escapeHtml(t)}</span>`));
     }
-    if(meta.length)descCell=(e.description?escapeHtml(e.description)+'<br>':'')+meta.join(' &nbsp;·&nbsp; ');
+    if(e.location){chips.push(`<span class="tag-chip legacy" title="Legacy location">${escapeHtml(e.location)}</span>`);}
+    const chipsHtml=chips.length?`<div style="margin-top:4px">${chips.join('')}</div>`:'';
+    if(meta.length||chipsHtml)descCell=(e.description?escapeHtml(e.description):'')+(meta.length?'<br>'+meta.join(' &nbsp;·&nbsp; '):'')+chipsHtml;
     const cbCell=massDeleteActive?`<td style="width:36px"><input type="checkbox" class="mass-cb row-cb" data-id="${e.id}" onchange="updateMassBar()"/></td>`:'';
     return `<tr data-row-id="${e.id}">
       ${cbCell}
@@ -1249,7 +1504,7 @@ function renderHistory(){
       <td>${isInc?'<span style="color:var(--info);font-weight:600">+ In</span>':'<span style="color:var(--danger);font-weight:600">− Out</span>'}</td>
       <td class="cat-badge ${isInc?'income':''}"><span>${escapeHtml(e.category)}</span></td>
       <td>${descCell}</td>
-      <td class="pay-method">${isInc?'—':escapeHtml(e.paymentMethod||'—')}</td>
+      <td class="pay-method">${escapeHtml(e.paymentMethod||'—')}</td>
       <td class="amount" style="color:${isInc?'var(--accent)':'var(--ink)'}">${isInc?'+':''}${fmt(e.amount)}</td>
       <td class="fee-cell">${isInc?'—':(e.txCost?fmt(e.txCost):'—')}</td>
       <td class="act-btn">
@@ -1438,14 +1693,31 @@ function onSuggestInput(fieldId,type){
   const listId=fieldId+'Suggest';
   const list=document.getElementById(listId);
   if(!input||!list)return;
-  const val=input.value.trim().toLowerCase();
+  const raw=input.value;
+  // For tags, suggest based on the LAST partial after a comma
+  if(type==='tags'){
+    const parts=raw.split(',');
+    const last=parts[parts.length-1].trim().toLowerCase();
+    if(!last){list.style.display='none';return;}
+    const known=allKnownTags();
+    const matches=known.filter(t=>t.toLowerCase().includes(last)&&!parts.slice(0,-1).map(p=>p.trim().toLowerCase()).includes(t.toLowerCase())).slice(0,6);
+    if(!matches.length){list.style.display='none';return;}
+    list.innerHTML=matches.map(m=>{
+      const prefix=parts.slice(0,-1).join(',').trim();
+      const newVal=(prefix?prefix+', ':'')+m;
+      return `<div class="suggest-item" onmousedown="pickSuggest('${fieldId}','${escapeAttr(newVal)}')">${escapeHtml(m)}</div>`;
+    }).join('');
+    list.style.display='block';
+    return;
+  }
+  const val=raw.trim().toLowerCase();
   if(!val){list.style.display='none';return;}
   const seen=new Set();
   const matches=[];
   for(const e of state.expenses){
-    const raw=type==='desc'?(e.description||''):(e.location||'');
-    if(!raw)continue;
-    const norm=raw.trim();
+    const raw2=type==='desc'?(e.description||''):(e.location||'');
+    if(!raw2)continue;
+    const norm=raw2.trim();
     if(norm.toLowerCase().includes(val)&&!seen.has(norm)){seen.add(norm);matches.push(norm);}
     if(matches.length>=6)break;
   }
@@ -1469,10 +1741,19 @@ function hideSuggest(fieldId){
 const photoUrlCache={};
 
 async function ensureReceiptsFolder(){
-  try{const r=await gFetch(`/me/drive/root:/${encodeURI(RECEIPTS_FOLDER)}`);return r.id;}catch{}
+  try{const r=await gFetch(`/me/drive/root:/${encodeURI(RECEIPTS_FOLDER)}`);return r.id;}
+  catch(e){
+    const msg=String(e.message||'');
+    if(!msg.includes('itemNotFound')&&!/\b404\b/.test(msg))throw e;
+  }
   const parentId=await ensureFolder();
-  const r=await gFetch(`/me/drive/items/${parentId}/children`,{method:'POST',body:JSON.stringify({name:'receipts',folder:{},['@microsoft.graph.conflictBehavior']:'rename'})});
-  return r.id;
+  try{
+    const r=await gFetch(`/me/drive/items/${parentId}/children`,{method:'POST',body:JSON.stringify({name:'receipts',folder:{},['@microsoft.graph.conflictBehavior']:'fail'})});
+    return r.id;
+  }catch{
+    const r=await gFetch(`/me/drive/root:/${encodeURI(RECEIPTS_FOLDER)}`);
+    return r.id;
+  }
 }
 
 function compressImage(file,maxDim=1600,quality=0.85){
@@ -1570,7 +1851,7 @@ async function handlePhotoUpload(ev){
     const draft={
       id:Date.now().toString(),createdAt:new Date().toISOString(),
       sourceText:'',source:'photo',
-      date:today(),amount:0,paymentMethod:'',refCode:'',location:'',
+      date:today(),amount:0,paymentMethod:'',refCode:'',tags:[],
       description:'',recipient:'',txCost:0,suggestedCategory:'',
       photoId:photo.id,photoName:photo.name,
       confidence:{date:'low',amount:'low',recipient:'low',refCode:'low',paymentMethod:'low'}
@@ -1592,23 +1873,39 @@ function parseSMS(text){
   const t=(text||'').trim();if(!t)return null;
   const out={
     sourceText:t,source:'manual',
-    date:today(),amount:0,paymentMethod:'',refCode:'',location:'',
+    date:today(),amount:0,paymentMethod:'',refCode:'',tags:[],
     description:'',recipient:'',txCost:0,suggestedCategory:'',
     confidence:{date:'low',amount:'low',recipient:'low',refCode:'low',paymentMethod:'low'}
   };
 
-  const isMpesa=/M-?PESA/i.test(t)||/^[A-Z]{2,3}[A-Z0-9]{6,9}\s+Confirmed/i.test(t);
-  const isAirtel=/AIRTEL\s*MONEY|airtel/i.test(t)&&!isMpesa;
-  const isEquity=/EQUITY|EAZZY/i.test(t);
-  const isKCB=/\bKCB\b/i.test(t);
-  const isCoop=/CO-?OP\s*BANK|COOP/i.test(t);
+  // ---- Source detection ----
+  // Real M-Pesa: starts with "[CODE] Confirmed."
+  const startsWithMpesaConfirm=/^[A-Z0-9]{8,12}\s+Confirmed\b/i.test(t);
+  // Airtel format: starts with "[CODE]." (no "Confirmed"), and usually has "MPESA ID:" near end for interop
+  const startsWithCodeAndDot=/^[A-Z0-9]{8,12}\.\s/.test(t);
+  const hasMpesaIdAtEnd=/MPESA\s*ID\s*[:\s]/i.test(t);
+  const hasAirtelKeyword=/AIRTEL\s*MONEY|\bairtel\b/i.test(t);
 
+  let isMpesa=startsWithMpesaConfirm;
+  let isAirtel=false;
+  if(hasAirtelKeyword)isAirtel=true;
+  if(!isMpesa&&startsWithCodeAndDot&&hasMpesaIdAtEnd)isAirtel=true; // interop
+  if(!isAirtel&&!isMpesa&&/M-?PESA/i.test(t))isMpesa=true;
+
+  const isEquity=/EQUITY|EAZZY/i.test(t)&&!isMpesa&&!isAirtel;
+  const isKCB=/\bKCB\b/i.test(t)&&!isMpesa&&!isAirtel;
+  const isCoop=/CO-?OP\s*BANK|COOP/i.test(t)&&!isMpesa&&!isAirtel;
+
+  // ---- Amount (first occurrence) ----
   const amtMatch=t.match(/(?:Ksh|KES|Kshs|KSh|Sh)\s*\.?\s*([\d,]+(?:\.\d{1,2})?)/i);
   if(amtMatch){out.amount=parseFloat(amtMatch[1].replace(/,/g,''));out.confidence.amount='high';}
 
-  const txMatch=t.match(/[Tt]ransaction\s+cost[\s,]+(?:Ksh|KES|Kshs|KSh)\s*\.?\s*([\d,]+(?:\.\d{1,2})?)/i);
+  // ---- Transaction cost / Fee ----
+  let txMatch=t.match(/[Tt]ransaction\s+cost[\s,]+(?:Ksh|KES|Kshs|KSh)\s*\.?\s*([\d,]+(?:\.\d{1,2})?)/i);
+  if(!txMatch)txMatch=t.match(/\bFee\s*[:\s]+(?:Ksh|KES|Kshs|KSh)\s*\.?\s*([\d,]+(?:\.\d{1,2})?)/i);
   if(txMatch)out.txCost=parseFloat(txMatch[1].replace(/,/g,''));
 
+  // ---- Date ----
   const dateMatch=t.match(/\b(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})\b/);
   if(dateMatch){
     let d=parseInt(dateMatch[1]),m=parseInt(dateMatch[2]),y=parseInt(dateMatch[3]);
@@ -1619,17 +1916,27 @@ function parseSMS(text){
     }
   }else{out.confidence.date='med';}
 
-  const codeMatch=t.match(/\b([A-Z]{2,3}[A-Z0-9]{7,9})\b/);
-  if(codeMatch&&isMpesa){out.refCode=codeMatch[1];out.confidence.refCode='high';}
+  // ---- Ref code ----
+  // First preference: token at the start of the message (true for both M-Pesa & Airtel)
+  const startCodeMatch=t.match(/^([A-Z0-9]{8,12})[\s\.]/);
+  if(startCodeMatch){
+    out.refCode=startCodeMatch[1];
+    out.confidence.refCode='high';
+  }else{
+    const codeMatch=t.match(/\b([A-Z]{2,3}[A-Z0-9]{6,9})\b/);
+    if(codeMatch){out.refCode=codeMatch[1];out.confidence.refCode='med';}
+  }
 
+  // ---- Payment method ----
   if(isMpesa){out.paymentMethod='Mobile (M-Pesa)';out.confidence.paymentMethod='high';}
   else if(isAirtel){out.paymentMethod='Mobile (Airtel)';out.confidence.paymentMethod='high';}
   else if(isEquity||isKCB||isCoop){out.paymentMethod='Bank Transfer';out.confidence.paymentMethod='med';}
 
+  // ---- Recipient ----
   let recipient='',isReceived=false,isWithdraw=false;
   let m=t.match(/\bsent to\s+(.+?)(?:\s+on\b|\s+for account|\.\s|\s+New\b)/i);
   if(m)recipient=m[1].trim();
-  if(!recipient){m=t.match(/\bpaid to\s+(.+?)(?:\s+on\b|\.\s|\s+New\b)/i);if(m)recipient=m[1].trim();}
+  if(!recipient){m=t.match(/\bpaid to\s+(.+?)(?:\s+account\s+\d+|\s+on\b|\.\s|\s+New\b)/i);if(m)recipient=m[1].trim();}
   if(!recipient){m=t.match(/\breceived\s+(?:Ksh|KES|Kshs)[\s\.\d,]+from\s+(.+?)(?:\s+on\b|\.\s|\s+New\b)/i);if(m){recipient=m[1].trim();isReceived=true;}}
   if(!recipient){m=t.match(/\bwithdrawn from\s+(.+?)(?:\s+on\b|\.\s|\s+New\b)/i);if(m){recipient=m[1].trim();isWithdraw=true;}}
   if(!recipient){m=t.match(/sent\s+(?:Ksh|KES)[\s\.\d,]+to\s+(.+?)(?:\s+on\b|\.\s|,)/i);if(m)recipient=m[1].trim();}
@@ -1653,8 +1960,9 @@ function suggestCategoryFromHistory(recipient,fullText){
   if(!tokens.length)return '';
   const scoreMap={};
   for(const e of state.expenses){
-    const hay=((e.description||'')+' '+(e.location||'')).toUpperCase();
-    if(!hay)continue;
+    const tagStr=Array.isArray(e.tags)?e.tags.join(' '):'';
+    const hay=((e.description||'')+' '+tagStr+' '+(e.location||'')).toUpperCase();
+    if(!hay.trim())continue;
     let score=0;
     for(const tok of tokens)if(hay.includes(tok))score++;
     if(score>0)scoreMap[e.category]=(scoreMap[e.category]||0)+score;
@@ -1728,7 +2036,7 @@ function renderDrafts(){
         </div>
         <div class="draft-field"><label>Transaction Cost</label><input type="number" id="dr_${d.id}_tx" value="${d.txCost||''}" step="0.50"/></div>
         <div class="draft-field"><label>${dot(d.confidence&&d.confidence.refCode)} Ref. Code</label><input type="text" id="dr_${d.id}_ref" value="${escapeAttr(d.refCode||'')}"/></div>
-        <div class="draft-field"><label>Location</label><input type="text" id="dr_${d.id}_loc" value="${escapeAttr(d.location||'')}" placeholder="optional"/></div>
+        <div class="draft-field"><label>Tags</label><input type="text" id="dr_${d.id}_tags" value="${escapeAttr(tagsToString(d.tags))}" placeholder="comma-separated"/></div>
       </div>
       <div class="draft-actions">
         <button class="btn-confirm" onclick="confirmDraft('${d.id}')"><i class="ti ti-check"></i> Confirm & Save</button>
@@ -1752,7 +2060,7 @@ async function confirmDraft(id){
   const paymentMethod=document.getElementById('dr_'+id+'_pay').value;
   const txCost=parseFloat(document.getElementById('dr_'+id+'_tx').value)||0;
   const refCode=document.getElementById('dr_'+id+'_ref').value.trim();
-  const location=document.getElementById('dr_'+id+'_loc').value.trim();
+  const tags=parseTags(document.getElementById('dr_'+id+'_tags').value);
   if(!date||!amount||amount<=0){showToast("Date and Amount are required","error");return;}
   if(!category){showToast("Pick a category","error");return;}
   if(refCode&&refCodeExists(refCode)){showToast("Duplicate — Ref. Code already exists","error");return;}
@@ -1766,7 +2074,7 @@ async function confirmDraft(id){
   }
   state.expenses.push({
     id:Date.now().toString(),date,category,description,amount,
-    paymentMethod,txCost,refCode,location,
+    paymentMethod,txCost,refCode,tags,location:'',
     sourceText:d.sourceText||'',photoId:d.photoId||'',photoName:photoName||'',
     type:'expense'
   });
@@ -1780,10 +2088,13 @@ async function confirmDraftAsIncome(id){
   const date=document.getElementById('dr_'+id+'_date').value;
   const amount=parseFloat(document.getElementById('dr_'+id+'_amount').value)||0;
   const description=document.getElementById('dr_'+id+'_desc').value.trim();
+  const paymentMethod=document.getElementById('dr_'+id+'_pay').value;
+  const refCode=document.getElementById('dr_'+id+'_ref').value.trim();
   if(!date||!amount||amount<=0){showToast("Date and Amount are required","error");return;}
+  if(refCode&&refCodeExists(refCode)){showToast("Duplicate — Ref. Code already exists","error");return;}
   const incCats=flattenCats(state.incomeCats);
   const category=incCats.length?incCats[0].cat:'Other Income';
-  state.income.push({id:Date.now().toString(),date,category,description,amount,type:'income'});
+  state.income.push({id:Date.now().toString(),date,category,description,amount,refCode,paymentMethod,type:'income'});
   state.drafts=state.drafts.filter(x=>x.id!==id);
   await saveData(false);refreshAll();
   showToast(`Income saved — Kshs ${fmtNum(amount)}`,"success");
@@ -1798,6 +2109,15 @@ async function discardDraft(id){
 }
 
 initMSAL();
+
+// Register service worker for PWA / offline
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').then(reg=>{
+      console.log('SW registered',reg.scope);
+    }).catch(err=>console.warn('SW failed',err));
+  });
+}
 </script>
 </body>
 </html>
