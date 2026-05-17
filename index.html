@@ -355,7 +355,7 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
       <div class="kpi expense"><div class="kpi-label">This Month Expenses</div><div class="kpi-value" id="kpiExpense">Kshs 0</div><div class="kpi-sub" id="kpiExpenseSub">0 entries</div></div>
       <div class="kpi fees"><div class="kpi-label">Transaction Costs</div><div class="kpi-value" id="kpiFees">Kshs 0</div><div class="kpi-sub">leaked on fees</div></div>
       <div class="kpi net"><div class="kpi-label">Net Savings</div><div class="kpi-value" id="kpiNet">Kshs 0</div><div class="kpi-sub" id="kpiNetSub">income − expenses</div></div>
-      <div class="kpi" style="border-left-color:var(--mu2)"><div class="kpi-label">Total Balance</div><div class="kpi-value" id="kpiTotalBal">Kshs 0</div><div class="kpi-sub">across all accounts</div></div>
+      <div class="kpi" style="border-left-color:var(--mu2)"><div class="kpi-label">Total Balance</div><div class="kpi-value" id="kpiTotalBal">Kshs 0</div><div class="kpi-sub" id="kpiTotalBalSub">across all accounts</div></div>
     </div>
 
     <div class="section-title" style="margin-top:8px">Insights</div>
@@ -578,8 +578,16 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
     <div class="modal-body">
       <input type="hidden" id="acctEditOldName"/>
       <div class="form-group" style="margin-bottom:14px"><label>Account Name</label><input type="text" id="acctName" placeholder="e.g. KCB Debit Card, I&amp;M Shillings, M-Pesa"/></div>
-      <div class="form-group"><label>Opening Balance (Kshs)</label><input type="number" id="acctOpenBal" placeholder="0" step="0.50"/>
-        <div style="font-size:11px;color:var(--mu);margin-top:4px">Set to your current balance if you're starting mid-way, or 0 if tracking from scratch.</div>
+      <div class="form-group" style="margin-bottom:14px"><label>Currency</label>
+        <select id="acctCurrency" onchange="updateOpenBalLabel()">
+          <option value="KES">KES — Kenyan Shilling</option>
+          <option value="USD">USD — US Dollar ($)</option>
+          <option value="EUR">EUR — Euro (€)</option>
+          <option value="GBP">GBP — British Pound (£)</option>
+        </select>
+      </div>
+      <div class="form-group"><label id="acctOpenBalLabel">Opening Balance (Kshs)</label><input type="number" id="acctOpenBal" placeholder="0" step="0.01"/>
+        <div style="font-size:11px;color:var(--mu);margin-top:4px">Set to your current balance if starting mid-way, or 0 to track from now.</div>
       </div>
     </div>
     <div class="modal-footer">
@@ -657,6 +665,7 @@ let state={
   incomeCats:JSON.parse(JSON.stringify(DEFAULT_INCOME_CATS)),
   paymentMethods:[...DEFAULT_PAYMENT_METHODS],
   openingBalances:{},
+  accountCurrencies:{},
   transfers:[]
 };
 
@@ -667,6 +676,17 @@ const CAT_COLORS=["#CC0000","#1f6fc4","#c47d10","#2d8a4f","#7b3f9e","#A30000","#
 function fmtNum(n){return Number(n||0).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmt(n){return 'Kshs '+fmtNum(n);}
 function fmtShort(n){return 'Kshs '+Number(n||0).toLocaleString('en-KE',{maximumFractionDigits:0});}
+function currencySymbol(curr){return {KES:'Kshs',USD:'$',EUR:'€',GBP:'£'}[curr]||curr;}
+function fmtCurrency(n,curr){
+  const sym=currencySymbol(curr||'KES');
+  const abs=Math.abs(n);
+  const neg=n<0;
+  const formatted=abs.toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  // USD/EUR/GBP: symbol before number; KES: symbol after
+  if(curr==='USD'||curr==='EUR'||curr==='GBP') return (neg?'- ':'')+sym+' '+formatted;
+  return (neg?'- ':'')+sym+' '+formatted;
+}
+function acctCurrency(methodName){return state.accountCurrencies[methodName]||'KES';}
 function today(){return new Date().toISOString().slice(0,10);}
 function thisMonth(){return new Date().getMonth();}
 function thisYear(){return new Date().getFullYear();}
@@ -805,6 +825,7 @@ function cacheState(){
     expenses:state.expenses,income:state.income,drafts:state.drafts,
     expenseCats:state.expenseCats,incomeCats:state.incomeCats,
     paymentMethods:state.paymentMethods,openingBalances:state.openingBalances,
+    accountCurrencies:state.accountCurrencies,
     transfers:state.transfers,
     cachedAt:new Date().toISOString()
   }));}catch{}
@@ -822,6 +843,7 @@ function loadCachedState(){
     if(j.incomeCats)state.incomeCats=j.incomeCats;
     if(j.paymentMethods)state.paymentMethods=j.paymentMethods;
     if(j.openingBalances)state.openingBalances=j.openingBalances;
+    if(j.accountCurrencies)state.accountCurrencies=j.accountCurrencies;
     if(j.transfers)state.transfers=j.transfers;
     return true;
   }catch{return false;}
@@ -859,6 +881,7 @@ async function loadData(){
       if(json.paymentMethods)state.paymentMethods=json.paymentMethods;
       if(json.drafts)state.drafts=json.drafts;
       if(json.openingBalances)state.openingBalances=json.openingBalances;
+      if(json.accountCurrencies)state.accountCurrencies=json.accountCurrencies;
       if(json.transfers)state.transfers=json.transfers;
       cacheState();
     }else{
@@ -884,6 +907,7 @@ async function saveData(notify=true){
       expenseCats:state.expenseCats,incomeCats:state.incomeCats,
       paymentMethods:state.paymentMethods,
       openingBalances:state.openingBalances,
+      accountCurrencies:state.accountCurrencies,
       transfers:state.transfers,
       lastUpdated:new Date().toISOString()
     });
@@ -1425,11 +1449,25 @@ function renderKPIs(){
   document.getElementById('kpiFees').textContent=fmtShort(feeSum);
   document.getElementById('kpiNet').textContent=fmtShort(net);
   document.getElementById('kpiNet').style.color=net>=0?'var(--accent)':'var(--danger)';
-  // Total across all accounts
+  // Total balance — KES accounts summed; foreign currency shown separately
   const balances=computeBalances();
-  const total=Object.values(balances).reduce((a,b)=>a+b,0);
   const totalEl=document.getElementById('kpiTotalBal');
-  if(totalEl){totalEl.textContent=fmtShort(total);totalEl.style.color=total>=0?'var(--ink)':'var(--danger)';}
+  const totalSubEl=document.getElementById('kpiTotalBalSub');
+  if(totalEl){
+    const kesTotal=Object.entries(balances)
+      .filter(([m])=>acctCurrency(m)==='KES')
+      .reduce((a,[,v])=>a+v,0);
+    totalEl.textContent=fmtShort(kesTotal);
+    totalEl.style.color=kesTotal>=0?'var(--ink)':'var(--danger)';
+    // Build foreign currency lines
+    const fxGroups={};
+    Object.entries(balances).forEach(([m,v])=>{
+      const curr=acctCurrency(m);
+      if(curr!=='KES'){fxGroups[curr]=(fxGroups[curr]||0)+v;}
+    });
+    const fxLines=Object.entries(fxGroups).map(([curr,v])=>fmtCurrency(v,curr)).join(' · ');
+    if(totalSubEl)totalSubEl.textContent=fxLines?`+ ${fxLines}`:'across all KES accounts';
+  }
 }
 
 function renderDayPatternInsight(){
@@ -2298,23 +2336,27 @@ function renderAccounts(){
   grid.innerHTML=state.paymentMethods.map(m=>{
     const bal=balances[m]!=null?balances[m]:0;
     const neg=bal<0;
-    // Pick accent colour by type hint in name
+    const curr=acctCurrency(m);
+    const isForeign=curr!=='KES';
     const isMobile=/m-pesa|airtel|mobile/i.test(m);
     const isCash=/cash/i.test(m);
-    const colorClass=isMobile?'mobile':isCash?'cash':'';
+    const colorClass=isForeign?'usd':isMobile?'mobile':isCash?'cash':'';
+    const openFmt=fmtCurrency(parseFloat(state.openingBalances[m])||0, curr);
+    const balFmt=fmtCurrency(bal, curr);
+    const currLabel=isForeign?`<span style="display:inline-block;background:#e8f5ec;color:var(--ok);font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;letter-spacing:.06em">${curr}</span> `:'';
     return `<div class="acct-card ${colorClass}">
       <div class="acct-actions">
         <button class="acct-btn" onclick="openEditAccount('${escapeAttr(m)}')" title="Edit / set opening balance"><i class="ti ti-pencil"></i></button>
         <button class="acct-btn" onclick="deleteAccount('${escapeAttr(m)}')" title="Delete"><i class="ti ti-trash"></i></button>
       </div>
-      <div class="acct-name">${escapeHtml(m)}</div>
-      <div class="acct-type">Opening: ${fmt(parseFloat(state.openingBalances[m])||0)}</div>
-      <div class="acct-balance ${neg?'neg':''}">${fmt(bal)}</div>
-      <div class="acct-currency">Running balance</div>
+      <div class="acct-name">${currLabel}${escapeHtml(m)}</div>
+      <div class="acct-type">Opening: ${openFmt}</div>
+      <div class="acct-balance ${neg?'neg':''}">${balFmt}</div>
+      <div class="acct-currency">Running balance${isForeign?' · '+curr+' account':''}</div>
     </div>`;
   }).join('');
   // Populate transfer selects
-  const opts=state.paymentMethods.map(m=>`<option value="${escapeAttr(m)}">${escapeHtml(m)}</option>`).join('');
+  const opts=state.paymentMethods.map(m=>`<option value="${escapeAttr(m)}">${escapeHtml(m)}${acctCurrency(m)!=='KES'?' ('+acctCurrency(m)+')':''}</option>`).join('');
   ['txfrFrom','txfrTo'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
 }
 
@@ -2323,7 +2365,9 @@ function renderAccounts(){
 function openAddAccount(){
   document.getElementById('acctEditOldName').value='';
   document.getElementById('acctName').value='';
+  document.getElementById('acctCurrency').value='KES';
   document.getElementById('acctOpenBal').value='';
+  document.getElementById('acctOpenBalLabel').textContent='Opening Balance (Kshs)';
   document.getElementById('modalAccountTitle').textContent='Add Account';
   document.getElementById('modalAccount').classList.add('show');
   setTimeout(()=>document.getElementById('acctName').focus(),100);
@@ -2332,28 +2376,37 @@ function openAddAccount(){
 function openEditAccount(name){
   document.getElementById('acctEditOldName').value=name;
   document.getElementById('acctName').value=name;
+  const curr=acctCurrency(name);
+  document.getElementById('acctCurrency').value=curr;
   document.getElementById('acctOpenBal').value=parseFloat(state.openingBalances[name])||'';
+  document.getElementById('acctOpenBalLabel').textContent=`Opening Balance (${currencySymbol(curr)})`;
   document.getElementById('modalAccountTitle').textContent='Edit Account';
   document.getElementById('modalAccount').classList.add('show');
   setTimeout(()=>document.getElementById('acctName').focus(),100);
+}
+
+function updateOpenBalLabel(){
+  const curr=document.getElementById('acctCurrency').value;
+  const lbl=document.getElementById('acctOpenBalLabel');
+  if(lbl)lbl.textContent=`Opening Balance (${currencySymbol(curr)})`;
 }
 
 async function confirmSaveAccount(){
   const newName=document.getElementById('acctName').value.trim();
   if(!newName){showToast("Account name is required","error");return;}
   const openBal=parseFloat(document.getElementById('acctOpenBal').value)||0;
+  const currency=document.getElementById('acctCurrency').value||'KES';
   const oldName=document.getElementById('acctEditOldName').value;
 
   if(oldName){
-    // Rename: update paymentMethods list, openingBalances key, and all transaction/transfer refs
     const idx=state.paymentMethods.indexOf(oldName);
     if(idx>-1)state.paymentMethods[idx]=newName;
     else state.paymentMethods.push(newName);
-    // Migrate opening balance
     if(oldName!==newName){
       state.openingBalances[newName]=openBal;
       delete state.openingBalances[oldName];
-      // Update existing transactions
+      state.accountCurrencies[newName]=currency;
+      delete state.accountCurrencies[oldName];
       state.expenses.forEach(e=>{if(e.paymentMethod===oldName)e.paymentMethod=newName;});
       state.income.forEach(i=>{if(i.paymentMethod===oldName)i.paymentMethod=newName;});
       state.transfers.forEach(t=>{
@@ -2362,18 +2415,21 @@ async function confirmSaveAccount(){
       });
     }else{
       state.openingBalances[newName]=openBal;
+      if(currency==='KES') delete state.accountCurrencies[newName];
+      else state.accountCurrencies[newName]=currency;
     }
   }else{
-    // New account
     if(state.paymentMethods.includes(newName)){showToast("An account with that name already exists","error");return;}
     state.paymentMethods.push(newName);
     state.openingBalances[newName]=openBal;
+    if(currency!=='KES')state.accountCurrencies[newName]=currency;
   }
 
   closeModal('modalAccount');
   await saveData(false);
   renderAccounts();
   buildPaymentMethodSelect();
+  renderKPIs();
   showToast(oldName?'Account updated':'Account added',"success");
 }
 
@@ -2381,6 +2437,7 @@ async function deleteAccount(name){
   if(!confirm(`Delete "${name}"?\n\nThis removes it from the accounts list. Existing transactions that used this account will still show the name but won't affect any balance card.`))return;
   state.paymentMethods=state.paymentMethods.filter(m=>m!==name);
   delete state.openingBalances[name];
+  delete state.accountCurrencies[name];
   await saveData(false);
   renderAccounts();
   buildPaymentMethodSelect();
