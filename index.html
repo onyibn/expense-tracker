@@ -40,27 +40,34 @@ body{font-family:'Lato',system-ui,sans-serif;background:var(--bg);color:var(--te
 .mode-btn.active[data-mode="income"]{background:var(--info)}
 .expense-only.hidden,.income-only.hidden{display:none !important}
 /* NAV */
-nav{background:var(--sb);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
-.nav-brand{display:flex;align-items:center;gap:14px}
-.nav-logo{width:28px;height:28px;background:var(--r);display:flex;align-items:center;justify-content:center;font-family:'Lato',sans-serif;color:#fff;font-size:13px;font-weight:900;letter-spacing:-.02em}
-.nav-title{color:#fff;font-size:15px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-.nav-sub{color:#666;font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;margin-left:6px}
-.nav-right{display:flex;align-items:center;gap:14px}
+nav{background:var(--sb);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:200}
+.nav-brand{display:flex;align-items:center;gap:12px}
+.nav-logo{width:26px;height:26px;background:var(--r);display:flex;align-items:center;justify-content:center;font-family:'Lato',sans-serif;color:#fff;font-size:12px;font-weight:900;letter-spacing:-.02em}
+.nav-title{color:#fff;font-size:14px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.nav-sub{color:#555;font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;margin-left:6px}
+.nav-right{display:flex;align-items:center;gap:12px}
 #userDisplay{color:#888;font-size:12px;font-weight:400}
-.btn-signin{background:var(--r);color:#fff;border:none;padding:8px 18px;border-radius:2px;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.06em;text-transform:uppercase}
+.btn-signin{background:var(--r);color:#fff;border:none;padding:8px 16px;border-radius:2px;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.06em;text-transform:uppercase}
 .btn-signin:hover{background:var(--rd)}
-.btn-signout{background:transparent;color:#666;border:1px solid #333;padding:6px 14px;border-radius:2px;font-family:'Lato',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.btn-signout{background:transparent;color:#666;border:1px solid #333;padding:5px 12px;border-radius:2px;font-family:'Lato',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .2s}
 .btn-signout:hover{color:#fff;border-color:#666}
-/* TABS */
-.tabs{background:var(--surface);border-bottom:1px solid var(--bd);padding:0 32px;display:flex;overflow-x:auto}
-.tab{padding:15px 18px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
-.tab.active{color:var(--r);border-bottom-color:var(--r)}
-.tab:hover:not(.active){color:var(--ink)}
+/* SIDEBAR + CONTENT LAYOUT */
+.app-body{display:flex;height:calc(100vh - 52px)}
+/* SIDEBAR */
+.sidebar{width:196px;background:var(--sb);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;border-right:1px solid #1a1a1a;position:sticky;top:52px;height:calc(100vh - 52px)}
+.sidebar-nav{display:flex;flex-direction:column;padding:12px 0;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 18px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#888;cursor:pointer;transition:all .15s;border-left:3px solid transparent;white-space:nowrap;position:relative;user-select:none}
+.nav-item:hover:not(.active){color:#ccc;background:rgba(255,255,255,.05)}
+.nav-item.active{color:#fff;background:rgba(255,255,255,.08);border-left-color:var(--r)}
+.nav-item i{font-size:16px;flex-shrink:0;width:18px;text-align:center}
+.nav-item-label{flex:1}
 /* DRAFT BADGE */
-.draft-badge{display:none;background:var(--warn);color:#fff;font-size:10px;padding:1px 6px;border-radius:2px;margin-left:5px;font-weight:700}
+.draft-badge{display:none;background:var(--warn);color:#fff;font-size:9px;padding:1px 5px;border-radius:2px;font-weight:700}
 .draft-badge.show{display:inline-block}
+/* MAIN CONTENT AREA */
+.content-area{flex:1;overflow-y:auto;background:var(--bg)}
 /* PAGE */
-.page{display:none;padding:32px;max-width:1100px;margin:0 auto}
+.page{display:none;padding:32px;max-width:1060px;margin:0 auto}
 .page.active{display:block}
 /* AUTH */
 #authGate{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 56px);text-align:center;padding:40px}
@@ -252,13 +259,47 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
 .tag-chip.legacy{background:#fdf5e6;color:#8a5a00;border-color:#e8d5a8}
 /* OPENING BALANCE INPUT */
 .ob-input{width:130px;padding:6px 10px;font-size:13px;text-align:right;border:1px solid var(--bd);border-radius:2px;font-family:'Lato',sans-serif;font-variant-numeric:tabular-nums}
+/* ACCOUNTS TAB */
+.acct-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:28px}
+.acct-card{background:var(--surface);border:1px solid var(--bd);padding:20px 22px;border-left:4px solid var(--info);position:relative}
+.acct-card.usd{border-left-color:var(--ok)}
+.acct-card.mobile{border-left-color:var(--r)}
+.acct-name{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.acct-type{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px}
+.acct-balance{font-size:22px;font-weight:900;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.acct-balance.neg{color:var(--danger)}
+.acct-currency{font-size:10px;color:var(--mu);margin-top:3px}
+.acct-actions{position:absolute;top:12px;right:12px;display:flex;gap:6px}
+.acct-btn{background:none;border:none;color:var(--mu);cursor:pointer;font-size:14px;padding:3px 5px;border-radius:2px}
+.acct-btn:hover{color:var(--ink);background:var(--hover)}
+/* TRANSFER */
+.transfer-form{background:var(--surface);border:1px solid var(--bd);padding:24px;margin-bottom:24px}
+.transfer-row{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:end;margin-bottom:16px}
+.transfer-arrow{font-size:20px;color:var(--mu);text-align:center;padding-bottom:11px}
+/* SETTINGS ACCORDION */
+.settings-accordion{display:flex;flex-direction:column;gap:8px}
+.acc-panel{background:var(--surface);border:1px solid var(--bd)}
+.acc-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;cursor:pointer;user-select:none;gap:14px}
+.acc-head:hover{background:var(--hover)}
+.acc-title{font-size:12px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:.12em;display:flex;align-items:center;gap:8px}
+.acc-title::before{content:'';display:inline-block;width:6px;height:6px;background:var(--r);flex-shrink:0}
+.acc-chevron{font-size:16px;color:var(--mu);transition:transform .2s;flex-shrink:0}
+.acc-panel.open .acc-chevron{transform:rotate(180deg)}
+.acc-body{display:none;padding:0 20px 20px}
+.acc-panel.open .acc-body{display:block}
+/* MOBILE sidebar collapse */
 @media(max-width:640px){
+  .sidebar{width:52px}
+  .nav-item-label,.nav-sub{display:none}
+  .nav-item{padding:12px;justify-content:center}
+  .draft-badge{position:absolute;top:6px;right:6px}
   .form-grid{grid-template-columns:1fr}
   .charts-grid{grid-template-columns:1fr}
   .page{padding:16px}
   .kpi-value{font-size:20px}
-  nav{padding:0 16px}
-  .tabs{padding:0 12px}
+  nav{padding:0 12px}
+  .transfer-row{grid-template-columns:1fr;gap:8px}
+  .transfer-arrow{display:none}
 }
 </style>
 </head>
@@ -291,16 +332,22 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
 </div>
 
 <div id="mainApp" style="display:none">
+<div class="app-body">
 
-  <div class="tabs">
-    <div class="tab active" onclick="switchTab('dashboard')"><i class="ti ti-layout-dashboard"></i> Dashboard</div>
-    <div class="tab" onclick="switchTab('drafts')"><i class="ti ti-inbox"></i> Drafts <span id="draftCount" class="draft-badge"></span></div>
-    <div class="tab" onclick="switchTab('log')"><i class="ti ti-plus-minus"></i> Log</div>
-    <div class="tab" onclick="switchTab('history')"><i class="ti ti-list"></i> History</div>
-    <div class="tab" onclick="switchTab('monthly')"><i class="ti ti-calendar"></i> Monthly</div>
-    <div class="tab" onclick="switchTab('charts')"><i class="ti ti-chart-bar"></i> Charts</div>
-    <div class="tab" onclick="switchTab('settings')"><i class="ti ti-settings"></i> Settings</div>
+  <div class="sidebar">
+    <div class="sidebar-nav">
+      <div class="nav-item active" onclick="switchTab('dashboard')"><i class="ti ti-layout-dashboard"></i><span class="nav-item-label">Dashboard</span></div>
+      <div class="nav-item" onclick="switchTab('drafts')"><i class="ti ti-inbox"></i><span class="nav-item-label">Drafts</span><span id="draftCount" class="draft-badge"></span></div>
+      <div class="nav-item" onclick="switchTab('log')"><i class="ti ti-plus-minus"></i><span class="nav-item-label">Log</span></div>
+      <div class="nav-item" onclick="switchTab('history')"><i class="ti ti-list"></i><span class="nav-item-label">History</span></div>
+      <div class="nav-item" onclick="switchTab('accounts')"><i class="ti ti-building-bank"></i><span class="nav-item-label">Accounts</span></div>
+      <div class="nav-item" onclick="switchTab('monthly')"><i class="ti ti-calendar"></i><span class="nav-item-label">Monthly</span></div>
+      <div class="nav-item" onclick="switchTab('charts')"><i class="ti ti-chart-bar"></i><span class="nav-item-label">Charts</span></div>
+      <div class="nav-item" onclick="switchTab('settings')"><i class="ti ti-settings"></i><span class="nav-item-label">Settings</span></div>
+    </div>
   </div>
+
+  <div class="content-area">
 
   <div class="page active" id="tab-dashboard">
     <div class="kpi-row">
@@ -447,44 +494,146 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
     </div>
   </div>
 
+  <div class="page" id="tab-accounts">
+    <div class="section-title">Accounts</div>
+    <div class="section-sub">Track balances across your bank accounts, mobile wallets, and cards.</div>
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:18px">
+      <button class="btn-primary" onclick="openAddAccount()"><i class="ti ti-plus"></i> Add Account</button>
+    </div>
+
+    <div class="acct-grid" id="accountGrid"></div>
+
+    <div class="section-title" style="margin-top:8px">Transfer Funds</div>
+    <div class="section-sub">Move money between accounts. Records as an internal transfer.</div>
+    <div class="transfer-form">
+      <div class="transfer-row">
+        <div class="form-group"><label>From Account</label><select id="txfrFrom"></select></div>
+        <div class="transfer-arrow"><i class="ti ti-arrow-right"></i></div>
+        <div class="form-group"><label>To Account</label><select id="txfrTo"></select></div>
+      </div>
+      <div class="form-grid" style="margin-bottom:16px">
+        <div class="form-group"><label>Date</label><input type="date" id="txfrDate"/></div>
+        <div class="form-group"><label>Amount</label><input type="number" id="txfrAmount" placeholder="0" min="0" step="0.50"/></div>
+        <div class="form-group"><label>Transaction Cost (Kshs)</label><input type="number" id="txfrCost" placeholder="0" min="0" step="0.50"/></div>
+        <div class="form-group"><label>Ref. Code <span style="color:var(--mu);font-weight:400">(optional)</span></label><input type="text" id="txfrRef" placeholder="e.g. bank transfer code"/></div>
+        <div class="form-group full"><label>Note <span style="color:var(--mu);font-weight:400">(optional)</span></label><input type="text" id="txfrNote" placeholder="e.g. Top up travel wallet"/></div>
+      </div>
+      <button class="btn-primary" onclick="saveTransfer()"><i class="ti ti-arrow-right-circle"></i> Record Transfer</button>
+    </div>
+
+    <div class="section-title">Transfer History</div>
+    <div class="section-sub">Internal transfers between your accounts.</div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Date</th><th>From</th><th>To</th><th>Amount</th><th>Tx Cost</th><th>Ref</th><th>Note</th><th></th></tr></thead>
+      <tbody id="transferBody"></tbody></table>
+    </div>
+    <div id="transferEmpty" class="empty" style="display:none"><div class="empty-icon"><i class="ti ti-arrows-exchange" style="font-size:32px;color:var(--mu2)"></i></div><p>No transfers yet.</p></div>
+  </div>
+
   <div class="page" id="tab-settings">
     <div class="section-title">Settings</div>
-    <div class="section-sub">Manage categories, payment methods, and app behaviour.</div>
-    <div class="card manage-section">
-      <div class="card-title" style="margin-bottom:14px">App Options</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-        <div>
-          <div style="font-size:14px;font-weight:600">Mass Delete Mode</div>
-          <div style="font-size:12px;color:var(--ink-muted);margin-top:2px">Show checkboxes in History to delete multiple entries at once</div>
+    <div class="section-sub">Manage categories, accounts, and app behaviour.</div>
+    <div class="settings-accordion">
+
+      <div class="acc-panel open">
+        <div class="acc-head" onclick="toggleAccordion(this)">
+          <div class="acc-title">App Options</div>
+          <i class="ti ti-chevron-up acc-chevron"></i>
         </div>
-        <label class="toggle-switch"><input type="checkbox" id="massDeleteToggle" onchange="toggleMassDelete(this.checked)"/><span class="toggle-knob"></span></label>
+        <div class="acc-body">
+          <div class="card manage-section" style="border:none;padding:0;box-shadow:none">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+              <div>
+                <div style="font-size:14px;font-weight:600">Mass Delete Mode</div>
+                <div style="font-size:12px;color:var(--ink-muted);margin-top:2px">Show checkboxes in History to delete multiple entries at once</div>
+              </div>
+              <label class="toggle-switch"><input type="checkbox" id="massDeleteToggle" onchange="toggleMassDelete(this.checked)"/><span class="toggle-knob"></span></label>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="card manage-section">
-      <div class="card-title" style="margin-bottom:8px">Opening Balances</div>
-      <div style="font-size:12px;color:var(--mu);margin-bottom:14px">Starting balance for each payment method. Running balances on the Dashboard = opening + income − expenses.</div>
-      <div id="manageBalances"></div>
-    </div>
-    <div class="card manage-section">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
-        <div class="card-title" style="margin:0">Expense Categories</div>
-        <button class="btn-tiny" onclick="addGroup('expense')">+ Add Group</button>
+
+      <div class="acc-panel">
+        <div class="acc-head" onclick="toggleAccordion(this)">
+          <div class="acc-title">Opening Balances</div>
+          <i class="ti ti-chevron-up acc-chevron"></i>
+        </div>
+        <div class="acc-body">
+          <div style="font-size:12px;color:var(--mu);margin-bottom:14px">Starting balance for each payment method (for Dashboard balance cards). Your Accounts tab has its own balance tracking.</div>
+          <div id="manageBalances"></div>
+        </div>
       </div>
-      <div id="manageExpense"></div>
-    </div>
-    <div class="card manage-section">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
-        <div class="card-title" style="margin:0">Income Categories</div>
-        <button class="btn-tiny" onclick="addGroup('income')">+ Add Group</button>
+
+      <div class="acc-panel">
+        <div class="acc-head" onclick="toggleAccordion(this)">
+          <div class="acc-title">Payment Methods</div>
+          <i class="ti ti-chevron-up acc-chevron"></i>
+        </div>
+        <div class="acc-body">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn-tiny" onclick="addPaymentMethod()">+ Add Method</button></div>
+          <div id="managePayments"></div>
+        </div>
       </div>
-      <div id="manageIncome"></div>
-    </div>
-    <div class="card manage-section">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
-        <div class="card-title" style="margin:0">Payment Methods</div>
-        <button class="btn-tiny" onclick="addPaymentMethod()">+ Add Method</button>
+
+      <div class="acc-panel">
+        <div class="acc-head" onclick="toggleAccordion(this)">
+          <div class="acc-title">Expense Categories</div>
+          <i class="ti ti-chevron-up acc-chevron"></i>
+        </div>
+        <div class="acc-body">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn-tiny" onclick="addGroup('expense')">+ Add Group</button></div>
+          <div id="manageExpense"></div>
+        </div>
       </div>
-      <div id="managePayments"></div>
+
+      <div class="acc-panel">
+        <div class="acc-head" onclick="toggleAccordion(this)">
+          <div class="acc-title">Income Categories</div>
+          <i class="ti ti-chevron-up acc-chevron"></i>
+        </div>
+        <div class="acc-body">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn-tiny" onclick="addGroup('income')">+ Add Group</button></div>
+          <div id="manageIncome"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- .content-area -->
+</div><!-- .app-body -->
+</div><!-- #mainApp -->
+
+<div class="modal-bg" id="modalAccount">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modalAccountTitle">Add Account</div><button class="modal-close" onclick="closeModal('modalAccount')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="acctEditId"/>
+      <div class="form-group" style="margin-bottom:14px"><label>Account Name</label><input type="text" id="acctName" placeholder="e.g. KCB Debit Card, I&amp;M Shillings"/></div>
+      <div class="form-group" style="margin-bottom:14px"><label>Account Type</label>
+        <select id="acctType">
+          <option value="bank">Bank Account</option>
+          <option value="mobile">Mobile Wallet</option>
+          <option value="card">Debit / Credit Card</option>
+          <option value="savings">Savings / SACCO</option>
+          <option value="forex">Foreign Currency</option>
+          <option value="cash">Cash</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:14px"><label>Currency</label>
+        <select id="acctCurrency">
+          <option value="KES">KES — Kenyan Shilling</option>
+          <option value="USD">USD — US Dollar</option>
+          <option value="EUR">EUR — Euro</option>
+          <option value="GBP">GBP — British Pound</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Opening Balance</label><input type="number" id="acctOpenBal" placeholder="0" step="0.50"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modalAccount')">Cancel</button>
+      <button class="btn-primary" onclick="confirmSaveAccount()">Save Account</button>
     </div>
   </div>
 </div>
@@ -556,7 +705,9 @@ let state={
   expenseCats:JSON.parse(JSON.stringify(DEFAULT_EXPENSE_CATS)),
   incomeCats:JSON.parse(JSON.stringify(DEFAULT_INCOME_CATS)),
   paymentMethods:[...DEFAULT_PAYMENT_METHODS],
-  openingBalances:{}
+  openingBalances:{},
+  accounts:[],
+  transfers:[]
 };
 
 const MONTHS_SHORT=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -704,6 +855,7 @@ function cacheState(){
     expenses:state.expenses,income:state.income,drafts:state.drafts,
     expenseCats:state.expenseCats,incomeCats:state.incomeCats,
     paymentMethods:state.paymentMethods,openingBalances:state.openingBalances,
+    accounts:state.accounts,transfers:state.transfers,
     cachedAt:new Date().toISOString()
   }));}catch{}
 }
@@ -720,6 +872,8 @@ function loadCachedState(){
     if(j.incomeCats)state.incomeCats=j.incomeCats;
     if(j.paymentMethods)state.paymentMethods=j.paymentMethods;
     if(j.openingBalances)state.openingBalances=j.openingBalances;
+    if(j.accounts)state.accounts=j.accounts;
+    if(j.transfers)state.transfers=j.transfers;
     return true;
   }catch{return false;}
 }
@@ -756,6 +910,8 @@ async function loadData(){
       if(json.paymentMethods)state.paymentMethods=json.paymentMethods;
       if(json.drafts)state.drafts=json.drafts;
       if(json.openingBalances)state.openingBalances=json.openingBalances;
+      if(json.accounts)state.accounts=json.accounts;
+      if(json.transfers)state.transfers=json.transfers;
       cacheState();
     }else{
       await saveData(false);
@@ -780,6 +936,8 @@ async function saveData(notify=true){
       expenseCats:state.expenseCats,incomeCats:state.incomeCats,
       paymentMethods:state.paymentMethods,
       openingBalances:state.openingBalances,
+      accounts:state.accounts,
+      transfers:state.transfers,
       lastUpdated:new Date().toISOString()
     });
     if(driveFileId){
@@ -1165,6 +1323,7 @@ async function deleteTransaction(id,type){
 
 function setDefaultDates(){
   document.getElementById('fDate').value=today();
+  const txd=document.getElementById('txfrDate');if(txd)txd.value=today();
 }
 
 function refreshAll(){
@@ -1668,12 +1827,16 @@ function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];
 
 function switchTab(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
-  const tabs=['dashboard','drafts','log','history','monthly','charts','settings'];
-  document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(t=>t.classList.remove('active'));
+  const pg=document.getElementById('tab-'+name);
+  if(pg)pg.classList.add('active');
+  const tabs=['dashboard','drafts','log','history','accounts','monthly','charts','settings'];
+  const idx=tabs.indexOf(name);
+  const navItems=document.querySelectorAll('.nav-item');
+  if(idx>=0&&navItems[idx])navItems[idx].classList.add('active');
   if(name==='charts')setTimeout(renderCharts,50);
   if(name==='dashboard')setTimeout(renderDashCharts,50);
+  if(name==='accounts'){renderAccounts();renderTransfers();}
 }
 
 function fmtDate(d){return new Date(d+'T00:00:00').toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});}
@@ -2109,6 +2272,149 @@ async function discardDraft(id){
 }
 
 initMSAL();
+
+// ============== ACCORDION ==============
+function toggleAccordion(headEl){
+  const panel=headEl.closest('.acc-panel');
+  panel.classList.toggle('open');
+}
+
+// ============== ACCOUNTS ==============
+const ACCT_TYPE_LABELS={bank:'Bank Account',mobile:'Mobile Wallet',card:'Card',savings:'Savings / SACCO',forex:'Foreign Currency',cash:'Cash'};
+
+function computeAccountBalance(acct){
+  let bal=parseFloat(acct.openingBalance)||0;
+  for(const i of state.income){if(i.accountId===acct.id)bal+=i.amount;}
+  for(const e of state.expenses){if(e.accountId===acct.id)bal-=(e.amount+(e.txCost||0));}
+  for(const t of state.transfers){
+    if(t.toId===acct.id)bal+=t.amount;
+    if(t.fromId===acct.id)bal-=(t.amount+(t.txCost||0));
+  }
+  return bal;
+}
+
+function renderAccounts(){
+  const grid=document.getElementById('accountGrid');
+  if(!grid)return;
+  if(!state.accounts.length){
+    grid.innerHTML='<div style="color:var(--mu);font-style:italic;font-size:13px;padding:8px 0">No accounts yet — add one above.</div>';
+    const opts='<option value="">— No accounts —</option>';
+    ['txfrFrom','txfrTo'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+    return;
+  }
+  grid.innerHTML=state.accounts.map(a=>{
+    const bal=computeAccountBalance(a);
+    const neg=bal<0;
+    const colorClass=a.currency==='USD'||a.currency==='EUR'||a.currency==='GBP'?'usd':(a.type==='mobile'?'mobile':'');
+    const curr=a.currency||'KES';
+    const balNum=Math.abs(bal).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const balFmt=curr==='KES'?fmt(bal):`${neg?'- ':''}${curr} ${balNum}`;
+    const openFmt=curr==='KES'?fmt(a.openingBalance||0):`${curr} ${(a.openingBalance||0).toFixed(2)}`;
+    return `<div class="acct-card ${colorClass}">
+      <div class="acct-actions">
+        <button class="acct-btn" onclick="openEditAccount('${a.id}')" title="Edit"><i class="ti ti-pencil"></i></button>
+        <button class="acct-btn" onclick="deleteAccount('${a.id}')" title="Delete"><i class="ti ti-trash"></i></button>
+      </div>
+      <div class="acct-name">${escapeHtml(a.name)}</div>
+      <div class="acct-type">${ACCT_TYPE_LABELS[a.type]||a.type}</div>
+      <div class="acct-balance ${neg?'neg':''}">${balFmt}</div>
+      <div class="acct-currency">${curr} · Opening: ${openFmt}</div>
+    </div>`;
+  }).join('');
+  const opts=state.accounts.map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
+  ['txfrFrom','txfrTo'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+}
+
+function renderTransfers(){
+  const tbody=document.getElementById('transferBody');
+  const empty=document.getElementById('transferEmpty');
+  if(!tbody)return;
+  const sorted=[...state.transfers].sort((a,b)=>b.date.localeCompare(a.date));
+  if(!sorted.length){tbody.innerHTML='';if(empty)empty.style.display='block';return;}
+  if(empty)empty.style.display='none';
+  const acctName=id=>{const a=state.accounts.find(x=>x.id===id);return a?a.name:'Unknown';};
+  tbody.innerHTML=sorted.map(t=>`<tr>
+    <td>${fmtDate(t.date)}</td>
+    <td>${escapeHtml(acctName(t.fromId))}</td>
+    <td>${escapeHtml(acctName(t.toId))}</td>
+    <td class="amount">${fmt(t.amount)}</td>
+    <td class="fee-cell">${t.txCost?fmt(t.txCost):'—'}</td>
+    <td>${escapeHtml(t.refCode||'—')}</td>
+    <td>${escapeHtml(t.note||'—')}</td>
+    <td><button class="del" onclick="deleteTransfer('${t.id}')" title="Delete"><i class="ti ti-trash"></i></button></td>
+  </tr>`).join('');
+}
+
+function openAddAccount(){
+  document.getElementById('acctEditId').value='';
+  document.getElementById('acctName').value='';
+  document.getElementById('acctType').value='bank';
+  document.getElementById('acctCurrency').value='KES';
+  document.getElementById('acctOpenBal').value='';
+  document.getElementById('modalAccountTitle').textContent='Add Account';
+  document.getElementById('modalAccount').classList.add('show');
+}
+
+function openEditAccount(id){
+  const a=state.accounts.find(x=>x.id===id);if(!a)return;
+  document.getElementById('acctEditId').value=a.id;
+  document.getElementById('acctName').value=a.name;
+  document.getElementById('acctType').value=a.type||'bank';
+  document.getElementById('acctCurrency').value=a.currency||'KES';
+  document.getElementById('acctOpenBal').value=a.openingBalance||'';
+  document.getElementById('modalAccountTitle').textContent='Edit Account';
+  document.getElementById('modalAccount').classList.add('show');
+}
+
+async function confirmSaveAccount(){
+  const name=document.getElementById('acctName').value.trim();
+  if(!name){showToast("Account name is required","error");return;}
+  const type=document.getElementById('acctType').value;
+  const currency=document.getElementById('acctCurrency').value;
+  const openingBalance=parseFloat(document.getElementById('acctOpenBal').value)||0;
+  const editId=document.getElementById('acctEditId').value;
+  if(editId){
+    const idx=state.accounts.findIndex(a=>a.id===editId);
+    if(idx>-1)state.accounts[idx]={...state.accounts[idx],name,type,currency,openingBalance};
+  }else{
+    state.accounts.push({id:Date.now().toString(),name,type,currency,openingBalance,createdAt:new Date().toISOString()});
+  }
+  closeModal('modalAccount');
+  await saveData(false);renderAccounts();
+  showToast(editId?'Account updated':'Account added',"success");
+}
+
+async function deleteAccount(id){
+  const a=state.accounts.find(x=>x.id===id);if(!a)return;
+  if(!confirm(`Delete "${a.name}"? This won't delete linked transactions.`))return;
+  state.accounts=state.accounts.filter(x=>x.id!==id);
+  await saveData(false);renderAccounts();
+  showToast("Account deleted","success");
+}
+
+async function saveTransfer(){
+  const fromId=document.getElementById('txfrFrom').value;
+  const toId=document.getElementById('txfrTo').value;
+  const date=document.getElementById('txfrDate').value;
+  const amount=parseFloat(document.getElementById('txfrAmount').value)||0;
+  const txCost=parseFloat(document.getElementById('txfrCost').value)||0;
+  const refCode=document.getElementById('txfrRef').value.trim();
+  const note=document.getElementById('txfrNote').value.trim();
+  if(!fromId||!toId){showToast("Select both accounts","error");return;}
+  if(fromId===toId){showToast("From and To accounts must be different","error");return;}
+  if(!date||amount<=0){showToast("Date and Amount are required","error");return;}
+  state.transfers.push({id:Date.now().toString(),fromId,toId,date,amount,txCost,refCode,note,createdAt:new Date().toISOString()});
+  ['txfrAmount','txfrCost','txfrRef','txfrNote'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  await saveData(false);renderAccounts();renderTransfers();
+  showToast(`Transfer recorded — ${fmt(amount)}`,"success");
+}
+
+async function deleteTransfer(id){
+  if(!confirm("Delete this transfer?"))return;
+  state.transfers=state.transfers.filter(t=>t.id!==id);
+  await saveData(false);renderAccounts();renderTransfers();
+  showToast("Transfer deleted","success");
+}
 
 // Register service worker for PWA / offline
 if('serviceWorker' in navigator){
