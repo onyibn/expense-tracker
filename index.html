@@ -69,6 +69,8 @@ nav{background:var(--sb);padding:0 24px;display:flex;align-items:center;justify-
 /* PAGE */
 .page{display:none;padding:32px;max-width:1060px;margin:0 auto}
 .page.active{display:block}
+/* History page gets full width — table needs the room */
+#tab-history{max-width:none;padding:32px}
 /* AUTH */
 #authGate{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 56px);text-align:center;padding:40px}
 .auth-card{background:var(--surface);border:1px solid var(--bd);padding:56px 48px;max-width:420px;width:100%;box-shadow:var(--shadow-lg)}
@@ -87,15 +89,17 @@ nav{background:var(--sb);padding:0 24px;display:flex;align-items:center;justify-
 .card-title{font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--ink);margin-bottom:16px;display:flex;align-items:center;gap:8px}
 .card-title::before{content:'';display:inline-block;width:6px;height:6px;background:var(--r);flex-shrink:0}
 /* KPI */
-.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:24px}
-.kpi{background:var(--surface);border:1px solid var(--bd);padding:20px 22px;border-left:3px solid var(--bd2)}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:24px}
+.kpi{background:var(--surface);border:1px solid var(--bd);padding:18px 20px;border-left:3px solid var(--bd2)}
 .kpi.income{border-left-color:var(--ok)}
 .kpi.expense{border-left-color:var(--r)}
 .kpi.fees{border-left-color:var(--warn)}
 .kpi.net{border-left-color:var(--info)}
-.kpi-label{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px}
-.kpi-value{font-size:30px;font-weight:900;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
-.kpi-sub{font-size:12px;color:var(--mu2);margin-top:6px}
+.kpi-label{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.14em;margin-bottom:8px}
+.kpi-amount{display:flex;align-items:baseline;gap:5px;line-height:1;margin-bottom:5px}
+.kpi-currency{font-size:11px;font-weight:700;color:var(--mu2);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0}
+.kpi-value{font-size:26px;font-weight:900;color:var(--ink);letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.kpi-sub{font-size:11px;color:var(--mu2);margin-top:4px}
 /* FORMS */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .form-group{display:flex;flex-direction:column;gap:6px}
@@ -287,7 +291,31 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
 .acc-panel.open .acc-chevron{transform:rotate(180deg)}
 .acc-body{display:none;padding:0 20px 20px}
 .acc-panel.open .acc-body{display:block}
-/* MOBILE sidebar collapse */
+/* TASKS */
+.task-input-row{display:flex;gap:10px;margin-bottom:20px;align-items:flex-start}
+.task-input-row input{flex:1;font-size:14px}
+.task-list{display:flex;flex-direction:column;gap:1px}
+.task-item{background:var(--surface);border:1px solid var(--bd);padding:14px 16px;display:flex;gap:12px;align-items:flex-start;transition:opacity .2s}
+.task-item.done{opacity:.5}
+.task-check{width:18px;height:18px;border:2px solid var(--bd2);border-radius:50%;cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.task-check:hover{border-color:var(--ok)}
+.task-check.checked{background:var(--ok);border-color:var(--ok)}
+.task-check.checked::after{content:'✓';font-size:11px;color:#fff;font-weight:700}
+.task-body{flex:1;min-width:0}
+.task-subject{font-size:14px;font-weight:700;color:var(--ink);line-height:1.4;word-break:break-word}
+.task-item.done .task-subject{text-decoration:line-through;color:var(--mu)}
+.task-notes{font-size:13px;color:var(--mu);margin-top:4px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.task-meta{font-size:10px;color:var(--mu2);margin-top:6px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.task-actions{display:flex;gap:4px;flex-shrink:0}
+.task-act-btn{background:none;border:none;color:var(--mu2);cursor:pointer;font-size:15px;padding:3px 5px;border-radius:2px}
+.task-act-btn:hover{color:var(--r)}
+.task-act-btn.del:hover{color:var(--danger)}
+.task-section-hdr{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.14em;padding:16px 0 8px;border-bottom:1px solid var(--bd);margin-bottom:2px}
+.task-add-notes{display:none;margin-top:8px}
+.task-add-notes.show{display:block}
+/* history table compact */
+.history-compact td{padding:8px 10px;font-size:13px}
+.history-compact thead th{padding:9px 10px}
 @media(max-width:640px){
   .sidebar{width:52px}
   .nav-item-label,.nav-sub{display:none}
@@ -341,6 +369,7 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
       <div class="nav-item" onclick="switchTab('log')"><i class="ti ti-plus-minus"></i><span class="nav-item-label">Log</span></div>
       <div class="nav-item" onclick="switchTab('history')"><i class="ti ti-list"></i><span class="nav-item-label">History</span></div>
       <div class="nav-item" onclick="switchTab('accounts')"><i class="ti ti-building-bank"></i><span class="nav-item-label">Accounts</span></div>
+      <div class="nav-item" onclick="switchTab('tasks')"><i class="ti ti-checklist"></i><span class="nav-item-label">Tasks</span></div>
       <div class="nav-item" onclick="switchTab('monthly')"><i class="ti ti-calendar"></i><span class="nav-item-label">Monthly</span></div>
       <div class="nav-item" onclick="switchTab('charts')"><i class="ti ti-chart-bar"></i><span class="nav-item-label">Charts</span></div>
       <div class="nav-item" onclick="switchTab('settings')"><i class="ti ti-settings"></i><span class="nav-item-label">Settings</span></div>
@@ -351,11 +380,11 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
 
   <div class="page active" id="tab-dashboard">
     <div class="kpi-row">
-      <div class="kpi income"><div class="kpi-label">This Month Income</div><div class="kpi-value" id="kpiIncome">Kshs 0</div><div class="kpi-sub" id="kpiIncomeSub">0 entries</div></div>
-      <div class="kpi expense"><div class="kpi-label">This Month Expenses</div><div class="kpi-value" id="kpiExpense">Kshs 0</div><div class="kpi-sub" id="kpiExpenseSub">0 entries</div></div>
-      <div class="kpi fees"><div class="kpi-label">Transaction Costs</div><div class="kpi-value" id="kpiFees">Kshs 0</div><div class="kpi-sub">leaked on fees</div></div>
-      <div class="kpi net"><div class="kpi-label">Net Savings</div><div class="kpi-value" id="kpiNet">Kshs 0</div><div class="kpi-sub" id="kpiNetSub">income − expenses</div></div>
-      <div class="kpi" style="border-left-color:var(--mu2)"><div class="kpi-label">Total Balance</div><div class="kpi-value" id="kpiTotalBal">Kshs 0</div><div class="kpi-sub" id="kpiTotalBalSub">across all accounts</div></div>
+      <div class="kpi income"><div class="kpi-label">This Month Income</div><div class="kpi-amount"><span class="kpi-currency">Kshs</span><span class="kpi-value" id="kpiIncome">0</span></div><div class="kpi-sub" id="kpiIncomeSub">0 entries</div></div>
+      <div class="kpi expense"><div class="kpi-label">This Month Expenses</div><div class="kpi-amount"><span class="kpi-currency">Kshs</span><span class="kpi-value" id="kpiExpense">0</span></div><div class="kpi-sub" id="kpiExpenseSub">0 entries</div></div>
+      <div class="kpi fees"><div class="kpi-label">Transaction Costs</div><div class="kpi-amount"><span class="kpi-currency">Kshs</span><span class="kpi-value" id="kpiFees">0</span></div><div class="kpi-sub">leaked on fees</div></div>
+      <div class="kpi net"><div class="kpi-label">Net Savings</div><div class="kpi-amount"><span class="kpi-currency">Kshs</span><span class="kpi-value" id="kpiNet">0</span></div><div class="kpi-sub" id="kpiNetSub">income − expenses</div></div>
+      <div class="kpi" style="border-left-color:var(--mu2)"><div class="kpi-label">Total Balance</div><div class="kpi-amount"><span class="kpi-currency">Kshs</span><span class="kpi-value" id="kpiTotalBal">0</span></div><div class="kpi-sub" id="kpiTotalBalSub">across all accounts</div></div>
     </div>
 
     <div class="section-title" style="margin-top:8px">Insights</div>
@@ -457,9 +486,9 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
       <button onclick="clearSelection()" style="background:rgba(255,255,255,.1)">Clear</button>
     </div>
     <div class="table-wrap">
-      <table>
+      <table class="history-compact">
         <thead><tr>
-          <th id="thCb" style="display:none;width:36px"><input type="checkbox" class="mass-cb" id="cbAll" onchange="toggleAllRows(this.checked)"/></th>
+          <th id="thCb" style="display:none;width:32px"><input type="checkbox" class="mass-cb" id="cbAll" onchange="toggleAllRows(this.checked)"/></th>
           <th>Date <button class="sort-btn desc" id="sortDateBtn" onclick="toggleDateSort()" title="Sort by date"></button></th>
           <th>Day</th><th>Type</th><th>Category</th><th>Description</th><th>Method</th><th>Amount</th><th>Tx Cost</th><th></th>
         </tr></thead>
@@ -467,6 +496,30 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
       </table>
     </div>
     <div id="historyEmpty" class="empty" style="display:none"><div class="empty-icon"><i class="ti ti-search" style="font-size:32px;color:var(--mu2)"></i></div><p>No transactions match your filters.</p></div>
+  </div>
+
+  <div class="page" id="tab-tasks">
+    <div class="section-title">Tasks &amp; Ideas</div>
+    <div class="section-sub">Jot down plans or ideas. Tick when done — they move to the archive with a completion date.</div>
+
+    <div class="task-input-row">
+      <input type="text" id="taskSubject" placeholder="Task or idea…" onkeydown="if(event.key==='Enter'){event.preventDefault();addTask();}"/>
+      <button class="btn-primary" onclick="addTask()" style="flex-shrink:0"><i class="ti ti-plus"></i> Add</button>
+    </div>
+    <div id="taskNotesToggle" style="margin-bottom:16px">
+      <button class="btn-tiny" onclick="toggleTaskNotes()" id="taskNotesBtn">+ Add notes</button>
+      <div class="task-add-notes" id="taskNotesArea">
+        <textarea id="taskNotes" rows="3" placeholder="Optional notes, details, or extra context…" style="margin-top:8px;font-size:13px;resize:vertical"></textarea>
+      </div>
+    </div>
+
+    <div class="task-section-hdr">Active</div>
+    <div class="task-list" id="taskListActive"></div>
+    <div id="taskActiveEmpty" style="font-size:13px;color:var(--mu);font-style:italic;padding:14px 0">No active tasks.</div>
+
+    <div class="task-section-hdr" style="margin-top:24px">Archived</div>
+    <div class="task-list" id="taskListArchive"></div>
+    <div id="taskArchiveEmpty" style="font-size:13px;color:var(--mu);font-style:italic;padding:14px 0">No archived tasks yet.</div>
   </div>
 
   <div class="page" id="tab-monthly">
@@ -1442,29 +1495,24 @@ function renderKPIs(){
   const incSum=monthInc.reduce((a,i)=>a+i.amount,0);
   const feeSum=monthExp.reduce((a,e)=>a+(e.txCost||0),0);
   const net=incSum-expSum-feeSum;
-  document.getElementById('kpiIncome').textContent=fmtShort(incSum);
+  const numFmt=n=>Math.abs(n).toLocaleString('en-KE',{maximumFractionDigits:0});
+  document.getElementById('kpiIncome').textContent=numFmt(incSum);
   document.getElementById('kpiIncomeSub').textContent=`${monthInc.length} entries`;
-  document.getElementById('kpiExpense').textContent=fmtShort(expSum);
+  document.getElementById('kpiExpense').textContent=numFmt(expSum);
   document.getElementById('kpiExpenseSub').textContent=`${monthExp.length} entries`;
-  document.getElementById('kpiFees').textContent=fmtShort(feeSum);
-  document.getElementById('kpiNet').textContent=fmtShort(net);
-  document.getElementById('kpiNet').style.color=net>=0?'var(--accent)':'var(--danger)';
-  // Total balance — KES accounts summed; foreign currency shown separately
+  document.getElementById('kpiFees').textContent=numFmt(feeSum);
+  const netEl=document.getElementById('kpiNet');
+  netEl.textContent=(net<0?'- ':'')+numFmt(net);
+  netEl.style.color=net>=0?'var(--ok)':'var(--danger)';
   const balances=computeBalances();
   const totalEl=document.getElementById('kpiTotalBal');
   const totalSubEl=document.getElementById('kpiTotalBalSub');
   if(totalEl){
-    const kesTotal=Object.entries(balances)
-      .filter(([m])=>acctCurrency(m)==='KES')
-      .reduce((a,[,v])=>a+v,0);
-    totalEl.textContent=fmtShort(kesTotal);
+    const kesTotal=Object.entries(balances).filter(([m])=>acctCurrency(m)==='KES').reduce((a,[,v])=>a+v,0);
+    totalEl.textContent=(kesTotal<0?'- ':'')+numFmt(kesTotal);
     totalEl.style.color=kesTotal>=0?'var(--ink)':'var(--danger)';
-    // Build foreign currency lines
     const fxGroups={};
-    Object.entries(balances).forEach(([m,v])=>{
-      const curr=acctCurrency(m);
-      if(curr!=='KES'){fxGroups[curr]=(fxGroups[curr]||0)+v;}
-    });
+    Object.entries(balances).forEach(([m,v])=>{const curr=acctCurrency(m);if(curr!=='KES'){fxGroups[curr]=(fxGroups[curr]||0)+v;}});
     const fxLines=Object.entries(fxGroups).map(([curr,v])=>fmtCurrency(v,curr)).join(' · ');
     if(totalSubEl)totalSubEl.textContent=fxLines?`+ ${fxLines}`:'across all KES accounts';
   }
@@ -1634,19 +1682,18 @@ function renderHistory(){
     const isInc=e.type==='income';
 
     if(isTransfer){
-      // Transfer row — special layout, no edit
-      const cbCell=massDeleteActive?`<td style="width:36px"><input type="checkbox" class="mass-cb row-cb" data-id="${e.id}" onchange="updateMassBar()"/></td>`:'';
+      const cbCell=massDeleteActive?`<td style="width:32px"><input type="checkbox" class="mass-cb row-cb" data-id="${e.id}" onchange="updateMassBar()"/></td>`:'';
       const descCell=`<span style="font-weight:600">${escapeHtml(e.fromMethod)}</span> <i class="ti ti-arrow-right" style="font-size:11px;color:var(--mu)"></i> <span style="font-weight:600">${escapeHtml(e.toMethod)}</span>${e.note?'<br><span style="font-size:11px;color:var(--mu)">'+escapeHtml(e.note)+'</span>':''}${e.refCode?'<br><span style="color:var(--info);font-size:11px">Ref: '+escapeHtml(e.refCode)+'</span>':''}`;
       return `<tr data-row-id="${e.id}">
         ${cbCell}
-        <td>${fmtDate(e.date)}</td>
+        <td style="white-space:nowrap">${fmtDate(e.date)}</td>
         <td>${new Date(e.date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'short'})}</td>
-        <td><span style="color:var(--mu2);font-weight:600">⇄ Transfer</span></td>
+        <td><span style="color:var(--mu2);font-weight:600">⇄</span></td>
         <td class="cat-badge"><span style="background:#e8f0fb;color:var(--info)">Transfer</span></td>
         <td>${descCell}</td>
-        <td class="pay-method" style="font-size:11px;color:var(--mu)">${escapeHtml(e.fromMethod)}</td>
-        <td class="amount" style="color:var(--mu)">${fmt(e.amount)}</td>
-        <td class="fee-cell">${e.txCost?fmt(e.txCost):'—'}</td>
+        <td class="pay-method">${escapeHtml(e.fromMethod)}</td>
+        <td class="amount" style="color:var(--mu)">${fmtNum(e.amount)}</td>
+        <td class="fee-cell">${e.txCost?fmtNum(e.txCost):'—'}</td>
         <td class="act-btn"><button class="del" onclick="deleteTransfer('${e.id}')" title="Delete"><i class="ti ti-trash"></i></button></td>
       </tr>`;
     }
@@ -1660,24 +1707,25 @@ function renderHistory(){
     if(e.location){chips.push(`<span class="tag-chip legacy" title="Legacy location">${escapeHtml(e.location)}</span>`);}
     const chipsHtml=chips.length?`<div style="margin-top:4px">${chips.join('')}</div>`:'';
     if(meta.length||chipsHtml)descCell=(e.description?escapeHtml(e.description):'')+(meta.length?'<br>'+meta.join(' &nbsp;·&nbsp; '):'')+chipsHtml;
-    const cbCell=massDeleteActive?`<td style="width:36px"><input type="checkbox" class="mass-cb row-cb" data-id="${e.id}" onchange="updateMassBar()"/></td>`:'';
+    const cbCell=massDeleteActive?`<td style="width:32px"><input type="checkbox" class="mass-cb row-cb" data-id="${e.id}" onchange="updateMassBar()"/></td>`:'';
+    const colSpan=massDeleteActive?10:9;
     return `<tr data-row-id="${e.id}">
       ${cbCell}
-      <td>${fmtDate(e.date)}</td>
+      <td style="white-space:nowrap">${fmtDate(e.date)}</td>
       <td>${new Date(e.date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'short'})}</td>
-      <td>${isInc?'<span style="color:var(--info);font-weight:600">+ In</span>':'<span style="color:var(--danger);font-weight:600">− Out</span>'}</td>
+      <td>${isInc?'<span style="color:var(--ok);font-weight:700">In</span>':'<span style="color:var(--danger);font-weight:700">Out</span>'}</td>
       <td class="cat-badge ${isInc?'income':''}"><span>${escapeHtml(e.category)}</span></td>
       <td>${descCell}</td>
-      <td class="pay-method">${escapeHtml(e.paymentMethod||'—')}</td>
-      <td class="amount" style="color:${isInc?'var(--accent)':'var(--ink)'}">${isInc?'+':''}${fmt(e.amount)}</td>
-      <td class="fee-cell">${isInc?'—':(e.txCost?fmt(e.txCost):'—')}</td>
+      <td class="pay-method" style="max-width:110px;white-space:normal;font-size:11px">${escapeHtml(e.paymentMethod||'—')}</td>
+      <td class="amount" style="color:${isInc?'var(--ok)':'var(--ink)'}">${isInc?'+':''}${fmtNum(e.amount)}</td>
+      <td class="fee-cell">${isInc?'—':(e.txCost?fmtNum(e.txCost):'—')}</td>
       <td class="act-btn">
         ${e.photoId?`<button class="history-photo-btn" onclick="openImgModal('${e.photoId}')" title="View receipt photo"><i class="ti ti-photo"></i></button>`:''}
         ${e.sourceText?`<button class="history-source-btn" onclick="toggleSourceRow('${e.id}')" title="View source SMS"><i class="ti ti-message"></i></button>`:''}
         <button onclick="${editFn}('${e.id}')" title="Edit"><i class="ti ti-pencil"></i></button>
         <button class="del" onclick="deleteTransaction('${e.id}','${e.type}')" title="Delete"><i class="ti ti-trash"></i></button>
       </td>
-    </tr>${e.sourceText?`<tr id="src_${e.id}" style="display:none"><td colspan="${massDeleteActive?10:9}" class="source-row">${escapeHtml(e.sourceText)}</td></tr>`:''}`;
+    </tr>${e.sourceText?`<tr id="src_${e.id}" style="display:none"><td colspan="${colSpan}" class="source-row">${escapeHtml(e.sourceText)}</td></tr>`:''}`;
   }).join('');
 }
 
@@ -1837,13 +1885,14 @@ function switchTab(name){
   document.querySelectorAll('.nav-item').forEach(t=>t.classList.remove('active'));
   const pg=document.getElementById('tab-'+name);
   if(pg)pg.classList.add('active');
-  const tabs=['dashboard','drafts','log','history','accounts','monthly','charts','settings'];
+  const tabs=['dashboard','drafts','log','history','accounts','tasks','monthly','charts','settings'];
   const idx=tabs.indexOf(name);
   const navItems=document.querySelectorAll('.nav-item');
   if(idx>=0&&navItems[idx])navItems[idx].classList.add('active');
   if(name==='charts')setTimeout(renderCharts,50);
   if(name==='dashboard')setTimeout(renderDashCharts,50);
   if(name==='accounts'){renderAccounts();}
+  if(name==='tasks'){renderTasks();}
 }
 
 function fmtDate(d){return new Date(d+'T00:00:00').toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});}
@@ -2314,6 +2363,115 @@ async function discardDraft(id){
   if(d&&d.photoId)await deletePhoto(d.photoId);
   state.drafts=state.drafts.filter(x=>x.id!==id);
   await saveData(false);refreshAll();
+}
+
+// ============== TASKS ==============
+const TASKS_FILE='onyiego_tasks.json';
+let tasksFileId=null;
+
+async function loadTasksFromDrive(){
+  try{
+    const folderId=await ensureFolder();
+    const items=await gFetch(`/me/drive/items/${folderId}/children`);
+    const found=items.value.find(f=>f.name===TASKS_FILE);
+    if(found){
+      tasksFileId=found.id;
+      const resp=await fetch(found['@microsoft.graph.downloadUrl']);
+      return await resp.json();
+    }
+    return [];
+  }catch(e){
+    console.warn('Tasks load failed, using localStorage cache',e);
+    try{return JSON.parse(localStorage.getItem('onyiego_tasks_cache')||'[]');}catch{return[];}
+  }
+}
+
+async function saveTasksToDrive(tasks){
+  try{
+    const folderId=await ensureFolder();
+    const body=JSON.stringify(tasks);
+    if(tasksFileId){
+      await fetch(`${GRAPH}/me/drive/items/${tasksFileId}/content`,{method:'PUT',headers:{Authorization:`Bearer ${await getToken()}`,'Content-Type':'application/json'},body});
+    }else{
+      const r=await fetch(`${GRAPH}/me/drive/items/${folderId}:/${encodeURIComponent(TASKS_FILE)}:/content`,{method:'PUT',headers:{Authorization:`Bearer ${await getToken()}`,'Content-Type':'application/json'},body});
+      const j=await r.json();tasksFileId=j.id;
+    }
+    try{localStorage.setItem('onyiego_tasks_cache',body);}catch{}
+  }catch(e){
+    console.warn('Tasks save to OneDrive failed, saved locally',e);
+    try{localStorage.setItem('onyiego_tasks_cache',JSON.stringify(tasks));}catch{}
+    showToast('Task saved locally — will sync when online','warn');
+  }
+}
+
+function toggleTaskNotes(){
+  const area=document.getElementById('taskNotesArea');
+  const btn=document.getElementById('taskNotesBtn');
+  const showing=area.classList.toggle('show');
+  btn.textContent=showing?'− Hide notes':'+ Add notes';
+  if(showing)setTimeout(()=>document.getElementById('taskNotes').focus(),50);
+}
+
+async function addTask(){
+  const subjectEl=document.getElementById('taskSubject');
+  const notesEl=document.getElementById('taskNotes');
+  const subject=(subjectEl.value||'').trim();
+  if(!subject){subjectEl.focus();return;}
+  const tasks=await loadTasksFromDrive();
+  tasks.unshift({id:Date.now().toString(),subject,notes:(notesEl.value||'').trim(),done:false,createdAt:new Date().toISOString(),doneAt:null});
+  await saveTasksToDrive(tasks);
+  subjectEl.value='';notesEl.value='';
+  document.getElementById('taskNotesArea').classList.remove('show');
+  document.getElementById('taskNotesBtn').textContent='+ Add notes';
+  subjectEl.focus();
+  renderTasksFromData(tasks);
+}
+
+async function completeTask(id){
+  const tasks=await loadTasksFromDrive();
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  t.done=true;t.doneAt=new Date().toISOString();
+  await saveTasksToDrive(tasks);renderTasksFromData(tasks);
+}
+
+async function uncompleteTask(id){
+  const tasks=await loadTasksFromDrive();
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  t.done=false;t.doneAt=null;
+  await saveTasksToDrive(tasks);renderTasksFromData(tasks);
+}
+
+async function deleteTask(id){
+  if(!confirm('Delete this task?'))return;
+  const tasks=(await loadTasksFromDrive()).filter(t=>t.id!==id);
+  await saveTasksToDrive(tasks);renderTasksFromData(tasks);
+}
+
+async function renderTasks(){
+  const tasks=await loadTasksFromDrive();
+  renderTasksFromData(tasks);
+}
+
+function renderTasksFromData(tasks){
+  const active=tasks.filter(t=>!t.done);
+  const archived=tasks.filter(t=>t.done).sort((a,b)=>(b.doneAt||'').localeCompare(a.doneAt||''));
+  const activeEl=document.getElementById('taskListActive');
+  const archiveEl=document.getElementById('taskListArchive');
+  if(!activeEl)return;
+  const d=n=>new Date(n).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});
+  const card=t=>`<div class="task-item${t.done?' done':''}">
+    <div class="task-check${t.done?' checked':''}" onclick="${t.done?`uncompleteTask('${t.id}')`:`completeTask('${t.id}')`}" title="${t.done?'Reopen':'Mark complete'}"></div>
+    <div class="task-body">
+      <div class="task-subject">${escapeHtml(t.subject)}</div>
+      ${t.notes?`<div class="task-notes">${escapeHtml(t.notes)}</div>`:''}
+      <div class="task-meta">Added ${d(t.createdAt)}${t.doneAt?' · Done '+d(t.doneAt):''}</div>
+    </div>
+    <div class="task-actions"><button class="task-act-btn del" onclick="deleteTask('${t.id}')" title="Delete"><i class="ti ti-trash"></i></button></div>
+  </div>`;
+  activeEl.innerHTML=active.map(card).join('');
+  document.getElementById('taskActiveEmpty').style.display=active.length?'none':'block';
+  archiveEl.innerHTML=archived.map(card).join('');
+  document.getElementById('taskArchiveEmpty').style.display=archived.length?'none':'block';
 }
 
 initMSAL();
