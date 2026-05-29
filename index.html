@@ -906,16 +906,54 @@ function loadCachedState(){
   }catch{return false;}
 }
 
+// Safety flag — set to true only after a confirmed successful load.
+// Prevents saveData() from ever overwriting OneDrive with empty/initial state.
+let dataLoadedFromDrive=false;
+
+async function listAllChildren(folderId){
+  // Paginate through all items in the folder to find files even if there are >200
+  let url=`/me/drive/items/${folderId}/children?$top=200`;
+  let all=[];
+  while(url){
+    const res=await gFetch(url);
+    if(res&&res.value)all=all.concat(res.value);
+    url=res&&res['@odata.nextLink']?res['@odata.nextLink'].replace(GRAPH,''):null;
+  }
+  return all;
+}
+
 async function loadData(){
   showStatus("Loading from OneDrive…");
   try{
     const folderId=await ensureFolder();
-    const items=await gFetch(`/me/drive/items/${folderId}/children`);
-    const found=items.value.find(f=>f.name===FILE_NAME);
+    // Paginated listing — critical to avoid missing the file when receipts accumulate
+    const allItems=await listAllChildren(folderId);
+    let found=allItems.find(f=>f.name===FILE_NAME);
+
+    // Fallback: try direct path lookup if listing didn't find it (defensive)
+    if(!found){
+      try{
+        const direct=await gFetch(`/me/drive/root:/${encodeURI(FOLDER)}/${encodeURIComponent(FILE_NAME)}`);
+        if(direct&&direct.id)found=direct;
+      }catch{}
+    }
+
     if(found){
       driveFileId=found.id;
-      const content=await fetch(found['@microsoft.graph.downloadUrl']);
-      const json=await content.json();
+      const dlUrl=found['@microsoft.graph.downloadUrl']||found['@microsoft.graph.downloadUrl'];
+      let json;
+      if(dlUrl){
+        const content=await fetch(dlUrl);
+        const txt=await content.text();
+        if(!txt||txt.length<2)throw new Error("Downloaded file is empty");
+        try{json=JSON.parse(txt);}catch(e){throw new Error("Downloaded file is corrupt: "+e.message);}
+      }else{
+        // No downloadUrl from direct lookup — fetch via content endpoint
+        const r=await fetch(`${GRAPH}/me/drive/items/${found.id}/content`,{headers:{Authorization:`Bearer ${await getToken()}`}});
+        if(!r.ok)throw new Error("Could not fetch file content");
+        json=await r.json();
+      }
+
       const expIn=json.expenses||[];
       state.expenses=expIn.map(e=>({
         id:e.id,date:e.date,category:e.category,description:e.description||'',
@@ -940,22 +978,39 @@ async function loadData(){
       if(json.openingBalances)state.openingBalances=json.openingBalances;
       if(json.accountCurrencies)state.accountCurrencies=json.accountCurrencies;
       if(json.transfers)state.transfers=json.transfers;
+      dataLoadedFromDrive=true; // ✅ Only NOW is it safe to save
       cacheState();
+      console.log(`Loaded ${state.expenses.length} expenses, ${state.income.length} income entries from OneDrive`);
     }else{
-      await saveData(false);
+      // File truly doesn't exist in folder. Don't auto-create — let the user know and let them confirm.
+      // If we got this far without an error AND the folder genuinely has no data file, it's a fresh start.
+      // But to be safe, require explicit user action before first save.
+      console.warn("No data file found in OneDrive folder. Treating as fresh install — will create file on first transaction.");
+      dataLoadedFromDrive=true; // Allow save since we confirmed file genuinely missing
+      driveFileId=null;
     }
   }catch(e){
-    console.error(e);
+    console.error("loadData failed:",e);
+    // CRITICAL: do NOT set dataLoadedFromDrive=true on error.
+    // This prevents saveData from overwriting good OneDrive data with empty local state.
     if(loadCachedState()){
-      showToast("Offline — loaded from local cache","warn");
+      showToast("Couldn't reach OneDrive — using local cache. Sign out & in to retry.","warn");
     }else{
-      showToast("Could not load from OneDrive.","error");
+      showToast("Could not load from OneDrive. Sign out and in to retry.","error");
     }
   }
   hideStatus();
 }
 
 async function saveData(notify=true){
+  // Safety guard — never write to OneDrive unless a real load happened first.
+  // This prevents wiping the file if loadData failed and state is empty/initial.
+  if(!dataLoadedFromDrive){
+    console.warn("saveData blocked — no successful load from OneDrive yet. Saving to local cache only.");
+    cacheState();
+    if(notify)showToast("Saved locally — sign out and in to sync to OneDrive","warn");
+    return;
+  }
   showStatus("Saving to OneDrive…");
   try{
     const folderId=await ensureFolder();
