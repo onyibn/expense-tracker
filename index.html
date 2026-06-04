@@ -440,8 +440,7 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
       <div class="nav-item active" onclick="switchTab('dashboard')"><i class="ti ti-layout-dashboard"></i><span class="nav-item-label">Dashboard</span></div>
       <div class="nav-group"></div>
       <div class="nav-group-label">Entry</div>
-      <div class="nav-item" onclick="switchTab('drafts')"><i class="ti ti-inbox"></i><span class="nav-item-label">Drafts</span><span id="draftCount" class="draft-badge"></span></div>
-      <div class="nav-item" onclick="switchTab('log')"><i class="ti ti-plus-minus"></i><span class="nav-item-label">Log</span></div>
+      <div class="nav-item" onclick="switchTab('log')"><i class="ti ti-plus-minus"></i><span class="nav-item-label">Log</span><span id="draftCount" class="draft-badge"></span></div>
       <div class="nav-group"></div>
       <div class="nav-item" onclick="switchTab('history')"><i class="ti ti-list"></i><span class="nav-item-label">History</span></div>
       <div class="nav-item" onclick="switchTab('accounts')"><i class="ti ti-building-bank"></i><span class="nav-item-label">Accounts</span></div>
@@ -474,79 +473,80 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
     <div id="dayPatternInsight"></div>
 
     <div class="charts-grid">
-      <div class="chart-card full"><h3>Income vs Expenses — Last 6 Months</h3><div class="chart-wrap" style="height:240px"><canvas id="chartDashTrend"></canvas></div></div>
-    </div>
-    <div class="charts-grid">
       <div class="chart-card full"><h3>Top 10 Expense Categories — Last 3 Months</h3><div class="chart-wrap" style="height:300px"><canvas id="chartDash3Month"></canvas></div></div>
     </div>
-  </div>
-
-  <div class="page" id="tab-drafts">
-    <div class="section-title">Drafts <span id="draftCountInline" style="font-size:14px;color:var(--mu);font-weight:400"></span></div>
-    <div class="section-sub">Paste an M-Pesa or bank SMS — the system extracts the details. Review and confirm to save as an expense.</div>
-
-    <div class="card">
-      <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Paste a transaction message</div>
-      <textarea id="draftPasteBox" rows="4" placeholder="Paste your M-Pesa, Airtel, Equity, KCB or Co-op SMS here…&#10;e.g. SK4A23PQ Confirmed. Ksh500.00 paid to JAVA HOUSE WESTLANDS on 7/5/26 at 12:30 PM. New M-PESA balance is Ksh3,200.00. Transaction cost Ksh0.00." style="width:100%;padding:12px;border:1px solid var(--bd);background:var(--surface);color:var(--ink);font-family:'Lato',sans-serif;font-size:14px;resize:vertical;border-radius:2px"></textarea>
-      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
-        <button class="btn-primary" onclick="parseAndAddDraft()">Parse Message</button>
-        <button class="btn-secondary" onclick="document.getElementById('draftPasteBox').value=''">Clear</button>
-        <button class="btn-secondary" onclick="document.getElementById('photoInput').click()"><i class="ti ti-camera"></i> Attach Photo</button>
-        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoUpload(event)"/>
-        <div style="flex:1;text-align:right;font-size:12px;color:var(--mu);align-self:center" id="parseHint">Tip: paste one message at a time, or attach a receipt photo</div>
-      </div>
+    <div class="charts-grid">
+      <div class="chart-card full"><h3>Income vs Expenses — This Year</h3><div class="chart-wrap" style="height:240px"><canvas id="chartDashTrend"></canvas></div></div>
     </div>
-
-    <div id="draftList" style="margin-top:18px"></div>
-    <div id="draftEmpty" style="text-align:center;padding:40px;color:var(--mu)">No drafts pending review.</div>
   </div>
 
   <div class="page" id="tab-log">
     <div class="section-title" id="logTitle">Log a Transaction</div>
-    <div class="section-sub" id="logSub">Pick a mode below, then fill the form.</div>
+    <div class="section-sub" id="logSub">Choose a mode below.</div>
 
     <div class="mode-toggle" id="modeToggle">
-      <button class="mode-btn active" data-mode="expense" onclick="setLogMode('expense')"><i class="ti ti-minus"></i> Expense</button>
+      <button class="mode-btn active" data-mode="drafts" onclick="setLogMode('drafts')"><i class="ti ti-inbox"></i> Drafts <span id="draftCountInline" style="font-size:11px;opacity:.8"></span></button>
+      <button class="mode-btn" data-mode="expense" onclick="setLogMode('expense')"><i class="ti ti-minus"></i> Expense</button>
       <button class="mode-btn" data-mode="income" onclick="setLogMode('income')"><i class="ti ti-plus"></i> Income</button>
     </div>
 
-    <div class="card">
-      <div class="form-grid">
-        <div class="form-group"><label>Date</label><input type="date" id="fDate"/></div>
-        <div class="form-group"><label id="catLabel">Category</label>
-          <div class="combo-wrap">
-            <input type="text" id="fCategory" autocomplete="off" placeholder="Select or type a new one…" oninput="onComboInputUnified()" onfocus="onComboInputUnified()" onblur="setTimeout(()=>hideCombo(logMode),200)"/>
-            <div class="combo-list" id="fCategoryList"></div>
-            <div class="combo-list" id="iCategoryList" style="display:none"></div>
-          </div>
-        </div>
-        <div class="form-group full"><label>Description / Note</label>
-          <div class="has-suggest">
-            <input type="text" id="fDesc" placeholder="e.g. Lunch with client at Java" autocomplete="off" oninput="onSuggestInput('fDesc','desc')" onblur="setTimeout(()=>hideSuggest('fDesc'),200)"/>
-            <div class="suggest-list" id="fDescSuggest" style="display:none"></div>
-          </div>
-        </div>
-        <div class="form-group"><label>Amount (Kshs)</label><input type="number" id="fAmount" placeholder="0" min="0" step="0.50"/></div>
-        <div class="form-group"><label>Payment Method</label><select id="fPayment"></select></div>
-        <div class="form-group expense-only"><label>Transaction Cost (Kshs)</label><input type="number" id="fTxCost" placeholder="0" min="0" step="0.50"/></div>
-        <div class="form-group"><label>Ref. Code <span style="color:var(--mu);font-weight:400">(optional)</span></label><input type="text" id="fRefCode" placeholder="e.g. M-Pesa code, receipt no."/></div>
-        <div class="form-group full expense-only"><label>Tags <span style="color:var(--mu);font-weight:400">(comma-separated, optional)</span></label>
-          <div class="has-suggest">
-            <input type="text" id="fTags" placeholder="e.g. Client-XYZ, Trip-Mombasa, Westlands" autocomplete="off" oninput="onSuggestInput('fTags','tags')" onblur="setTimeout(()=>hideSuggest('fTags'),200)"/>
-            <div class="suggest-list" id="fTagsSuggest" style="display:none"></div>
-          </div>
-        </div>
-        <div class="form-group full" style="align-self:end;display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn-primary" id="btnSave" onclick="saveTransaction()"><span id="saveLabel">Save Expense</span></button>
-          <button class="btn-secondary" id="btnCancelEdit" onclick="cancelEditUnified()" style="display:none">Cancel</button>
+    <!-- DRAFTS MODE -->
+    <div id="draftsPanel">
+      <div class="card" style="margin-bottom:18px">
+        <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Paste a transaction message</div>
+        <textarea id="draftPasteBox" rows="4" placeholder="Paste your M-Pesa, Airtel, Equity, KCB or Co-op SMS here…&#10;e.g. SK4A23PQ Confirmed. Ksh500.00 paid to JAVA HOUSE WESTLANDS on 7/5/26 at 12:30 PM. New M-PESA balance is Ksh3,200.00. Transaction cost Ksh0.00." style="width:100%;padding:12px;border:1px solid var(--bd);background:var(--surface);color:var(--ink);font-family:'Lato',sans-serif;font-size:14px;resize:vertical;border-radius:2px"></textarea>
+        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn-primary" onclick="parseAndAddDraft()">Parse Message</button>
+          <button class="btn-secondary" onclick="document.getElementById('draftPasteBox').value=''">Clear</button>
+          <button class="btn-secondary" onclick="document.getElementById('photoInput').click()"><i class="ti ti-camera"></i> Attach Photo</button>
+          <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoUpload(event)"/>
+          <div style="flex:1;text-align:right;font-size:12px;color:var(--mu);align-self:center" id="parseHint">Tip: paste one message at a time, or attach a receipt photo</div>
         </div>
       </div>
-      <input type="hidden" id="fEditId" value=""/>
-      <input type="hidden" id="fEditType" value=""/>
+      <div id="draftList"></div>
+      <div id="draftEmpty" style="text-align:center;padding:40px;color:var(--mu)">No drafts pending review.</div>
     </div>
-    <div style="margin-top:20px" id="quickLogWrap" class="expense-only">
-      <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">Quick Log</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap" id="quickBtns"></div>
+
+    <!-- EXPENSE / INCOME FORM -->
+    <div id="logFormPanel" style="display:none">
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group"><label>Date</label><input type="date" id="fDate"/></div>
+          <div class="form-group"><label id="catLabel">Category</label>
+            <div class="combo-wrap">
+              <input type="text" id="fCategory" autocomplete="off" placeholder="Select or type a new one…" oninput="onComboInputUnified()" onfocus="onComboInputUnified()" onblur="setTimeout(()=>hideCombo(logMode),200)"/>
+              <div class="combo-list" id="fCategoryList"></div>
+              <div class="combo-list" id="iCategoryList" style="display:none"></div>
+            </div>
+          </div>
+          <div class="form-group full"><label>Description / Note</label>
+            <div class="has-suggest">
+              <input type="text" id="fDesc" placeholder="e.g. Lunch with client at Java" autocomplete="off" oninput="onSuggestInput('fDesc','desc')" onblur="setTimeout(()=>hideSuggest('fDesc'),200)"/>
+              <div class="suggest-list" id="fDescSuggest" style="display:none"></div>
+            </div>
+          </div>
+          <div class="form-group"><label>Amount (Kshs)</label><input type="number" id="fAmount" placeholder="0" min="0" step="0.50"/></div>
+          <div class="form-group"><label>Payment Method</label><select id="fPayment"></select></div>
+          <div class="form-group expense-only"><label>Transaction Cost (Kshs)</label><input type="number" id="fTxCost" placeholder="0" min="0" step="0.50"/></div>
+          <div class="form-group"><label>Ref. Code <span style="color:var(--mu);font-weight:400">(optional)</span></label><input type="text" id="fRefCode" placeholder="e.g. M-Pesa code, receipt no."/></div>
+          <div class="form-group full expense-only"><label>Tags <span style="color:var(--mu);font-weight:400">(comma-separated, optional)</span></label>
+            <div class="has-suggest">
+              <input type="text" id="fTags" placeholder="e.g. Client-XYZ, Trip-Mombasa, Westlands" autocomplete="off" oninput="onSuggestInput('fTags','tags')" onblur="setTimeout(()=>hideSuggest('fTags'),200)"/>
+              <div class="suggest-list" id="fTagsSuggest" style="display:none"></div>
+            </div>
+          </div>
+          <div class="form-group full" style="align-self:end;display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn-primary" id="btnSave" onclick="saveTransaction()"><span id="saveLabel">Save Expense</span></button>
+            <button class="btn-secondary" id="btnCancelEdit" onclick="cancelEditUnified()" style="display:none">Cancel</button>
+          </div>
+        </div>
+        <input type="hidden" id="fEditId" value=""/>
+        <input type="hidden" id="fEditType" value=""/>
+      </div>
+      <div style="margin-top:20px" id="quickLogWrap" class="expense-only">
+        <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">Quick Log</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap" id="quickBtns"></div>
+      </div>
     </div>
   </div>
 
@@ -555,6 +555,7 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
     <div class="section-sub">All your logged expenses and income.</div>
     <div class="filters">
       <select id="filterType" onchange="renderHistory()"><option value="">All transactions</option><option value="expense">Expenses only</option><option value="income">Income only</option><option value="transfer">Transfers only</option></select>
+      <select id="filterYear" onchange="renderHistory()"><option value="">All years</option></select>
       <select id="filterMonth" onchange="renderHistory()"><option value="">All months</option><option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option><option>May</option><option>Jun</option><option>Jul</option><option>Aug</option><option>Sep</option><option>Oct</option><option>Nov</option><option>Dec</option></select>
       <select id="filterCat" onchange="renderHistory()"><option value="">All categories</option></select>
       <input type="text" id="filterSearch" placeholder="Search description…" oninput="renderHistory()" style="min-width:200px"/>
@@ -1638,28 +1639,29 @@ function buildQuickBtns(){
   });
 }
 
-let logMode='expense';
+let logMode='drafts';
 
 function setLogMode(mode){
   logMode=mode;
   document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
-  document.querySelectorAll('.expense-only').forEach(el=>el.classList.toggle('hidden',mode!=='expense'));
-  document.querySelectorAll('.income-only').forEach(el=>el.classList.toggle('hidden',mode!=='income'));
-  // Update label and button styling
-  document.getElementById('catLabel').textContent=mode==='expense'?'Category':'Source / Category';
-  const btn=document.getElementById('btnSave');
-  if(mode==='income'){btn.classList.add('income-btn');document.getElementById('saveLabel').textContent='Save Income';}
-  else{btn.classList.remove('income-btn');document.getElementById('saveLabel').textContent='Save Expense';}
-  // Hide both combo lists when switching
-  document.getElementById('fCategoryList').classList.remove('show');
-  document.getElementById('iCategoryList').classList.remove('show');
-  // Show the right list element (hide the wrong one entirely)
-  document.getElementById('fCategoryList').style.display=mode==='expense'?'':'none';
-  document.getElementById('iCategoryList').style.display=mode==='income'?'':'none';
-  // Clear category field unless editing
-  if(!document.getElementById('fEditId').value){
-    document.getElementById('fCategory').value='';
+  const isDrafts=mode==='drafts';
+  const draftsPanel=document.getElementById('draftsPanel');
+  const logFormPanel=document.getElementById('logFormPanel');
+  if(draftsPanel)draftsPanel.style.display=isDrafts?'block':'none';
+  if(logFormPanel)logFormPanel.style.display=isDrafts?'none':'block';
+  if(!isDrafts){
+    document.querySelectorAll('.expense-only').forEach(el=>el.classList.toggle('hidden',mode!=='expense'));
+    document.querySelectorAll('.income-only').forEach(el=>el.classList.toggle('hidden',mode!=='income'));
+    const saveLabel=document.getElementById('saveLabel');
+    const catLabel=document.getElementById('catLabel');
+    if(saveLabel)saveLabel.textContent=mode==='expense'?'Save Expense':'Save Income';
+    if(catLabel)catLabel.textContent=mode==='expense'?'Category':'Income Category';
   }
+  // Update mode-btn colour for income
+  document.querySelectorAll('.mode-btn').forEach(b=>{
+    if(b.dataset.mode==='income'&&b.classList.contains('active'))b.style.background='var(--info)';
+    else if(b.classList.contains('active')&&b.dataset.mode!=='income')b.style.background='';
+  });
 }
 
 function onComboInputUnified(){onComboInput(logMode);}
@@ -1821,6 +1823,7 @@ function setDefaultDates(){
 function refreshAll(){
   populateYearSelects();
   renderKPIs();
+  renderNetWorth();
   renderBalances();
   renderInsights();
   renderDayPatternInsight();
@@ -1853,10 +1856,14 @@ function getAccountSection(name){
 
 function computeNetWorth(){
   const balances=computeBalances();
+  return computeNetWorthFromBalances(balances);
+}
+
+function computeNetWorthFromBalances(balances){
   let liquid=0,investments=0,liabilities=0;
   Object.entries(balances).forEach(([name,bal])=>{
     const curr=acctCurrency(name);
-    if(curr!=='KES')return; // skip forex for now
+    if(curr!=='KES')return;
     const section=getAccountSection(name);
     if(section==='investment')investments+=bal;
     else if(section==='liability')liabilities+=Math.abs(bal);
@@ -1865,14 +1872,17 @@ function computeNetWorth(){
   return{liquid,investments,liabilities,netWorth:liquid+investments-liabilities};
 }
 
-function renderNetWorth(){
-  const{liquid,investments,liabilities,netWorth}=computeNetWorth();
-  const set=(id,v,col)=>{const el=document.getElementById(id);if(el){el.textContent=fmtShort(v);if(col)el.style.color=col;}};
-  set('nwLiquid',liquid);
-  set('nwInvestments',investments);
-  set('nwLiabilities',liabilities);
+function renderNetWorth(balances){
+  const b=balances||computeBalances();
+  const{liquid,investments,liabilities,netWorth}=computeNetWorthFromBalances(b);
+  const numFmt=n=>Math.abs(Math.round(n)).toLocaleString('en-KE');
+  const sign=n=>n<0?'- ':'';
+  const setEl=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent='Kshs '+(v<0?'- ':'')+numFmt(v);};
+  setEl('nwLiquid',liquid);
+  setEl('nwInvestments',investments);
+  setEl('nwLiabilities',liabilities);
   const nwEl=document.getElementById('nwTotal');
-  if(nwEl){nwEl.textContent=fmtShort(netWorth);nwEl.style.color=netWorth>=0?'#7dffb0':'#ff8080';}
+  if(nwEl){nwEl.textContent='Kshs '+(netWorth<0?'- ':'')+numFmt(netWorth);nwEl.style.color=netWorth>=0?'#7dffb0':'#ff8080';}
 }
 
 function renderAccounts(){
@@ -1881,7 +1891,6 @@ function renderAccounts(){
   const liabGrid=document.getElementById('liabilityGrid');
   if(!grid)return;
   const balances=computeBalances();
-  renderNetWorth();
 
   function makeCard(m){
     const bal=balances[m]!=null?balances[m]:0;
@@ -1921,6 +1930,8 @@ function renderAccounts(){
   grid.innerHTML=regular.length?regular.map(makeCard).join(''):'<div style="color:var(--mu);font-style:italic;font-size:13px">No regular accounts.</div>';
   if(invGrid)invGrid.innerHTML=investments.length?investments.map(makeCard).join(''):'<div style="color:var(--mu);font-style:italic;font-size:13px;padding:8px 0">No investment accounts yet.</div>';
   if(liabGrid)liabGrid.innerHTML=liabilities.length?liabilities.map(makeCard).join(''):'<div style="color:var(--mu);font-style:italic;font-size:13px;padding:8px 0">No liabilities added.</div>';
+
+  renderNetWorth(balances); // pass already-computed balances for consistency
 
   const opts=state.paymentMethods.map(m=>`<option value="${escapeAttr(m)}">${escapeHtml(m)}${acctCurrency(m)!=='KES'?' ('+acctCurrency(m)+')':''}</option>`).join('');
   ['txfrFrom','txfrTo'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
@@ -2140,18 +2151,16 @@ function renderDashCharts(){
   const tickCol='#6b6b6b';
   const now=new Date();
 
-  // ---- Income vs Expenses: last 6 calendar months ----
-  const months6=[];
-  for(let i=5;i>=0;i--){
-    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    months6.push({year:d.getFullYear(),month:d.getMonth(),label:MONTHS_SHORT[d.getMonth()]+(i>0&&d.getFullYear()!==now.getFullYear()?' '+d.getFullYear():'')});
-  }
-  const incLine=months6.map(({year,month})=>state.income.filter(i=>{const d=new Date(i.date+'T00:00:00');return d.getMonth()===month&&d.getFullYear()===year;}).reduce((a,i)=>a+i.amount,0));
-  const expLine=months6.map(({year,month})=>state.expenses.filter(e=>{const d=new Date(e.date+'T00:00:00');return d.getMonth()===month&&d.getFullYear()===year;}).reduce((a,e)=>a+e.amount+(e.txCost||0),0));
+  // ---- Income vs Expenses: full current year by month ----
+  const ty=thisYear();
+  const yearExp=state.expenses.filter(e=>new Date(e.date+'T00:00:00').getFullYear()===ty);
+  const yearInc=state.income.filter(i=>new Date(i.date+'T00:00:00').getFullYear()===ty);
+  const incLine=MONTHS_SHORT.map((_,mi)=>yearInc.filter(i=>new Date(i.date+'T00:00:00').getMonth()===mi).reduce((a,i)=>a+i.amount,0));
+  const expLine=MONTHS_SHORT.map((_,mi)=>yearExp.filter(e=>new Date(e.date+'T00:00:00').getMonth()===mi).reduce((a,e)=>a+e.amount+(e.txCost||0),0));
   destroyChart('chartDashTrend');
   charts.chartDashTrend=new Chart(document.getElementById('chartDashTrend'),{
     type:'line',
-    data:{labels:months6.map(m=>m.label),datasets:[
+    data:{labels:MONTHS_SHORT,datasets:[
       {label:'Income',data:incLine,borderColor:'#2d8a4f',backgroundColor:'rgba(45,138,79,.1)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#2d8a4f'},
       {label:'Expenses',data:expLine,borderColor:'#CC0000',backgroundColor:'rgba(204,0,0,.08)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#CC0000'}
     ]},
@@ -2254,6 +2263,7 @@ async function massDeleteSelected(){
 
 function renderHistory(){
   const ft=document.getElementById('filterType').value;
+  const fy=document.getElementById('filterYear')?.value||'';
   const fm=document.getElementById('filterMonth').value;
   const fc=document.getElementById('filterCat').value;
   const fs=document.getElementById('filterSearch').value.toLowerCase();
@@ -2268,8 +2278,9 @@ function renderHistory(){
     return histSortAsc?cmp:-cmp;
   });
 
+  if(fy)data=data.filter(e=>new Date(e.date+'T00:00:00').getFullYear()===parseInt(fy));
   if(fm)data=data.filter(e=>MONTHS_SHORT[new Date(e.date+'T00:00:00').getMonth()]===fm);
-  if(fc)data=data.filter(e=>e.category===fc); // transfers have no category; won't match
+  if(fc)data=data.filter(e=>e.category===fc);
   if(fs)data=data.filter(e=>{
     const tagsJoined=Array.isArray(e.tags)?e.tags.join(' '):'';
     return (e.description||'').toLowerCase().includes(fs)||
@@ -2540,6 +2551,12 @@ function populateYearSelects(){
     const prev=sel.value||cur;
     sel.innerHTML=years.map(y=>`<option value="${y}"${String(y)===prev?' selected':''}>${y}</option>`).join('');
   });
+  // History year filter — shows all years, plus "All years" option
+  const histYearSel=document.getElementById('filterYear');
+  if(histYearSel){
+    const prevHist=histYearSel.value||'';
+    histYearSel.innerHTML='<option value="">All years</option>'+years.map(y=>`<option value="${y}"${String(y)===prevHist?' selected':''}>${y}</option>`).join('');
+  }
   // Populate chart category + account filters
   const catSel=document.getElementById('chartsCatFilter');
   if(catSel){
@@ -2586,6 +2603,7 @@ function switchTab(name){
   if(name==='monthly'){populateYearSelects();renderMonthGrid();renderMonthSelect();renderMonthDetail();}
   if(name==='bills'){renderBills();}
   if(name==='receivables'){renderReceivables();}
+  if(name==='log'){setLogMode(logMode==='expense'||logMode==='income'?logMode:'drafts');}
 }
 
 function fmtDate(d){return new Date(d+'T00:00:00').toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});}
@@ -2907,7 +2925,8 @@ function parseAndAddDraft(){
   document.getElementById('draftPasteBox').value='';
   saveData(false);
   refreshAll();
-  switchTab('drafts');
+  switchTab('log');
+  setLogMode('drafts');
   showToast("Draft created — review below","success");
 }
 
@@ -2918,7 +2937,7 @@ function renderDrafts(){
   const badge=document.getElementById('draftCount');
   if(badge){badge.textContent=count;badge.className='draft-badge'+(count?' show':'');}
   const inline=document.getElementById('draftCountInline');
-  if(inline)inline.textContent=count?`(${count} pending)`:'';
+  if(inline)inline.textContent=count?`(${count})`:'';
   if(!wrap||!empty)return;
   if(!count){wrap.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
