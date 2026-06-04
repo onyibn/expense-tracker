@@ -671,27 +671,30 @@ td.pay-method{font-size:12px;color:var(--mu);white-space:nowrap}
       <div class="nw-item"><div class="nw-label">Net Worth</div><div class="nw-value" id="nwTotal">Kshs 0</div></div>
     </div>
 
+    <!-- Single Add Account button -->
+    <div class="accounts-section-hdr" style="margin-bottom:16px">
+      <span>Accounts</span>
+      <button class="btn-tiny" onclick="openAddAccount()"><i class="ti ti-plus"></i> Add Account</button>
+    </div>
+
     <!-- Regular Accounts -->
-    <div class="accounts-section-hdr">
-      <span>Regular Accounts</span>
-      <button class="btn-tiny" onclick="openAddAccount('regular')"><i class="ti ti-plus"></i> Add Account</button>
+    <div class="accounts-section-hdr" style="margin-bottom:8px">
+      <span style="font-size:12px;color:var(--mu);font-weight:600;letter-spacing:.08em">REGULAR</span>
     </div>
     <div class="acct-grid" id="accountGrid"></div>
 
     <!-- Investments -->
-    <div class="accounts-section-hdr" style="margin-top:8px">
-      <span>Investments</span>
-      <button class="btn-tiny" onclick="openAddAccount('investment')"><i class="ti ti-plus"></i> Add Investment</button>
+    <div class="accounts-section-hdr" style="margin-top:20px;margin-bottom:4px">
+      <span style="font-size:12px;color:var(--mu);font-weight:600;letter-spacing:.08em">INVESTMENTS</span>
     </div>
-    <div class="section-sub" style="padding-left:0;font-size:12px;margin-bottom:14px">BOSA (locked capital), MMF, unit trusts, stocks. Contributions via Transfer. Returns via Income (Investment Returns category).</div>
+    <div class="section-sub" style="padding-left:0;font-size:12px;margin-bottom:10px">BOSA (locked capital), MMF, unit trusts, stocks. Contributions via Transfer. Returns via Income (Investment Returns category).</div>
     <div class="acct-grid" id="investmentGrid"></div>
 
     <!-- Liabilities -->
-    <div class="accounts-section-hdr" style="margin-top:8px">
-      <span>Liabilities</span>
-      <button class="btn-tiny" onclick="openAddAccount('liability')"><i class="ti ti-plus"></i> Add Liability</button>
+    <div class="accounts-section-hdr" style="margin-top:20px;margin-bottom:4px">
+      <span style="font-size:12px;color:var(--mu);font-weight:600;letter-spacing:.08em">LIABILITIES</span>
     </div>
-    <div class="section-sub" style="padding-left:0;font-size:12px;margin-bottom:14px">Loans, overdrafts, credit card balances. Update balance manually when you make a repayment.</div>
+    <div class="section-sub" style="padding-left:0;font-size:12px;margin-bottom:10px">Loans, overdrafts, credit card balances. Update balance manually when you make a repayment.</div>
     <div class="acct-grid" id="liabilityGrid"></div>
 
     <!-- Transfer Funds -->
@@ -2335,7 +2338,7 @@ function renderHistory(){
       return `<tr data-row-id="${e.id}">
         ${cbCell}
         <td style="white-space:nowrap">${fmtDate(e.date)}</td>
-        <td>${new Date(e.date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'short'})}</td>
+        <td>${(()=>{const _d=new Date((e.date||'')+'T00:00:00');return isNaN(_d)?'—':_d.toLocaleDateString('en-KE',{weekday:'short'});})()}</td>
         <td><span style="color:var(--mu2);font-weight:600">⇄</span></td>
         <td class="cat-badge"><span style="background:#e8f0fb;color:var(--info)">Transfer</span></td>
         <td>${descCell}</td>
@@ -2366,7 +2369,7 @@ function renderHistory(){
     return `<tr data-row-id="${e.id}">
       ${cbCell}
       <td style="white-space:nowrap">${fmtDate(e.date)}</td>
-      <td>${new Date(e.date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'short'})}</td>
+      <td>${(()=>{const _d=new Date((e.date||'')+'T00:00:00');return isNaN(_d)?'—':_d.toLocaleDateString('en-KE',{weekday:'short'});})()}</td>
       <td>${isInc?'<span style="color:var(--ok);font-weight:700">In</span>':'<span style="color:var(--danger);font-weight:700">Out</span>'}</td>
       <td class="cat-badge ${isInc?'income':''}"><span>${escapeHtml(e.category)}</span></td>
       <td>${descCell}</td>
@@ -2617,12 +2620,13 @@ function switchTab(name){
   if(name==='accounts'){renderAccounts();renderPayees();}
   if(name==='tasks'){renderTasks();}
   if(name==='monthly'){populateYearSelects();renderMonthGrid();renderMonthSelect();renderMonthDetail();}
+  if(name==='history'){renderHistory();populateFilterCats();}
   if(name==='bills'){renderBills();}
   if(name==='receivables'){renderReceivables();}
   if(name==='log'){setLogMode(logMode==='expense'||logMode==='income'?logMode:'drafts');}
 }
 
-function fmtDate(d){return new Date(d+'T00:00:00').toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});}
+function fmtDate(d){if(!d)return '—';const dt=new Date(d+'T00:00:00');return isNaN(dt)?d:dt.toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});}
 function showToast(msg,type=''){
   const t=document.getElementById('toast');
   t.textContent=msg;t.className='show'+(type?' '+type:'');
@@ -3792,58 +3796,21 @@ function toggleAccordion(headEl){
 }
 
 // ============== ACCOUNTS (= Payment Methods) ==============
-function renderAccounts(){
-  const grid=document.getElementById('accountGrid');
-  if(!grid)return;
-  const balances=computeBalances();
-  if(!state.paymentMethods.length){
-    grid.innerHTML='<div style="color:var(--mu);font-style:italic;font-size:13px;padding:8px 0">No accounts yet.</div>';
-    return;
-  }
-  grid.innerHTML=state.paymentMethods.map(m=>{
-    const bal=balances[m]!=null?balances[m]:0;
-    const neg=bal<0;
-    const curr=acctCurrency(m);
-    const isForeign=curr!=='KES';
-    const isMobile=/m-pesa|airtel|mobile/i.test(m);
-    const isCash=/cash/i.test(m);
-    const colorClass=isForeign?'usd':isMobile?'mobile':isCash?'cash':'';
-    const openBal=parseFloat(state.openingBalances[m])||0;
-    const openFmt=fmtCurrency(openBal, curr);
-    const balFmt=fmtCurrency(bal, curr);
-    const currLabel=isForeign?`<span style="display:inline-block;background:#e8f5ec;color:var(--ok);font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;letter-spacing:.06em">${curr}</span> `:'';
-    const openPrompt=openBal===0?` <span style="color:var(--warn);font-size:10px;cursor:pointer" onclick="openEditAccount('${escapeAttr(m)}')" title="Click to set">· tap to set</span>`:'';
-    return `<div class="acct-card ${colorClass}">
-      <div class="acct-actions">
-        <button class="acct-btn" onclick="openEditAccount('${escapeAttr(m)}')" title="Edit / set opening balance"><i class="ti ti-pencil"></i></button>
-        <button class="acct-btn" onclick="deleteAccount('${escapeAttr(m)}')" title="Delete"><i class="ti ti-trash"></i></button>
-      </div>
-      <div class="acct-name">${currLabel}${escapeHtml(m)}</div>
-      <div class="acct-type">Opening: ${openFmt}${openPrompt}</div>
-      <div class="acct-balance ${neg?'neg':''}">${balFmt}</div>
-      <div class="acct-currency">Running balance${isForeign?' · '+curr+' account':''}</div>
-    </div>`;
-  }).join('');
-  // Populate transfer selects
-  const opts=state.paymentMethods.map(m=>`<option value="${escapeAttr(m)}">${escapeHtml(m)}${acctCurrency(m)!=='KES'?' ('+acctCurrency(m)+')':''}</option>`).join('');
-  ['txfrFrom','txfrTo'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
-}
-
 // Transfer history is rendered via renderHistory() with filter type='transfer'
 
-function openAddAccount(section='regular'){
+function openAddAccount(){
   document.getElementById('acctEditOldName').value='';
-  document.getElementById('acctSectionType').value=section;
+  document.getElementById('acctSectionType').value='regular';
   document.getElementById('acctName').value='';
   document.getElementById('acctCurrency').value='KES';
-  document.getElementById('acctType').value=section==='investment'?'bosa':section==='liability'?'loan':'current';
+  document.getElementById('acctType').value='current';
   document.getElementById('acctInstitution').value='';
   document.getElementById('acctNumber').value='';
   document.getElementById('acctBranch').value='';
   document.getElementById('acctOpenBal').value='';
   document.getElementById('acctNotes').value='';
   document.getElementById('acctOpenBalLabel').textContent='Opening Balance (Kshs)';
-  document.getElementById('modalAccountTitle').textContent=section==='investment'?'Add Investment':section==='liability'?'Add Liability':'Add Account';
+  document.getElementById('modalAccountTitle').textContent='Add Account';
   document.getElementById('modalAccount').classList.add('show');
   setTimeout(()=>document.getElementById('acctName').focus(),100);
 }
