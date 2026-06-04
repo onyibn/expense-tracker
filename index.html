@@ -2266,21 +2266,25 @@ function renderHistory(){
   const fy=document.getElementById('filterYear')?.value||'';
   const fm=document.getElementById('filterMonth').value;
   const fc=document.getElementById('filterCat').value;
-  const fs=document.getElementById('filterSearch').value.toLowerCase();
+  const fs=(document.getElementById('filterSearch').value||'').toLowerCase();
 
+  // Build combined data — always force the correct type
   let data=[];
-  if(!ft||ft==='expense')data=data.concat(state.expenses.map(e=>({...e,type:'expense'})));
-  if(!ft||ft==='income')data=data.concat(state.income.map(i=>({...i,type:'income'})));
-  if(!ft||ft==='transfer')data=data.concat(state.transfers.map(t=>({...t,type:'transfer'})));
+  if(!ft||ft==='expense')data=data.concat(state.expenses.map(e=>({...e,_type:'expense',type:'expense'})));
+  if(!ft||ft==='income')data=data.concat(state.income.map(i=>({...i,_type:'income',type:'income'})));
+  if(!ft||ft==='transfer')data=data.concat(state.transfers.map(t=>({...t,_type:'transfer',type:'transfer'})));
 
+  // Safe sort — guard against undefined/null dates
   data.sort((a,b)=>{
-    const cmp=a.date.localeCompare(b.date)||(a.id||'').localeCompare(b.id||'');
+    const da=a.date||'0000-00-00';
+    const db=b.date||'0000-00-00';
+    const cmp=da.localeCompare(db)||(a.id||'').localeCompare(b.id||'');
     return histSortAsc?cmp:-cmp;
   });
 
-  if(fy)data=data.filter(e=>new Date(e.date+'T00:00:00').getFullYear()===parseInt(fy));
-  if(fm)data=data.filter(e=>MONTHS_SHORT[new Date(e.date+'T00:00:00').getMonth()]===fm);
-  if(fc)data=data.filter(e=>e.category===fc);
+  if(fy)data=data.filter(e=>{try{return new Date(e.date+'T00:00:00').getFullYear()===parseInt(fy);}catch{return false;}});
+  if(fm)data=data.filter(e=>{try{return MONTHS_SHORT[new Date(e.date+'T00:00:00').getMonth()]===fm;}catch{return false;}});
+  if(fc)data=data.filter(e=>e._type==='transfer'?false:e.category===fc);
   if(fs)data=data.filter(e=>{
     const tagsJoined=Array.isArray(e.tags)?e.tags.join(' '):'';
     return (e.description||'').toLowerCase().includes(fs)||
@@ -2292,6 +2296,18 @@ function renderHistory(){
       (e.toMethod||'').toLowerCase().includes(fs)||
       (e.note||'').toLowerCase().includes(fs);
   });
+
+  // Show data summary so it's clear what's loaded
+  const expTotal=state.expenses.length, incTotal=state.income.length, txfrTotal=state.transfers.length;
+  const subEl=document.querySelector('#tab-history .section-sub');
+  if(subEl){
+    const activeFilters=[];
+    if(fy)activeFilters.push(fy);
+    if(fm)activeFilters.push(fm);
+    if(fc)activeFilters.push(fc);
+    const filterNote=activeFilters.length?' — filtered':'';
+    subEl.textContent=`${expTotal} expense${expTotal!==1?'s':''} · ${incTotal} income · ${txfrTotal} transfer${txfrTotal!==1?'s':''} in state${filterNote}. Showing ${data.length}.`;
+  }
 
   const tbody=document.getElementById('historyBody');
   const empty=document.getElementById('historyEmpty');
