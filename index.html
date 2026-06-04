@@ -2323,62 +2323,73 @@ function renderHistory(){
   if(!data.length){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
 
-  tbody.innerHTML=data.map(e=>{
-    const isTransfer=e.type==='transfer';
-    const isInc=e.type==='income';
+  // colSpan defined once up here so both transfer and non-transfer rows can use it
+  const colSpan=massDeleteActive?10:9;
 
-    if(isTransfer){
+  const rows=[];
+  for(const e of data){
+    try{
+      const isTransfer=e._type==='transfer';
+      const isInc=e._type==='income';
       const cbCell=massDeleteActive?`<td style="width:32px"><input type="checkbox" class="mass-cb row-cb" data-id="${e.id}" onchange="updateMassBar()"/></td>`:'';
-      const descCell=`<span style="font-weight:600">${escapeHtml(e.fromMethod)}</span> <i class="ti ti-arrow-right" style="font-size:11px;color:var(--mu)"></i> <span style="font-weight:600">${escapeHtml(e.toMethod)}</span>${e.note?'<br><span style="font-size:11px;color:var(--mu)">'+escapeHtml(e.note)+'</span>':''}${e.refCode?'<br><span style="color:var(--info);font-size:11px">Ref: '+escapeHtml(e.refCode)+'</span>':''}`;
+      const dayCell=(()=>{const _d=new Date((e.date||'')+'T00:00:00');return isNaN(_d)?'—':_d.toLocaleDateString('en-KE',{weekday:'short'});})();
+      const srcRow=e.sourceText?`<tr id="src_${e.id}" style="display:none"><td colspan="${colSpan}" class="source-row">${escapeHtml(e.sourceText)}</td></tr>`:'';
+
+      if(isTransfer){
+        const descCell=`<span style="font-weight:600">${escapeHtml(e.fromMethod||'')}</span> <i class="ti ti-arrow-right" style="font-size:11px;color:var(--mu)"></i> <span style="font-weight:600">${escapeHtml(e.toMethod||'')}</span>${e.note?'<br><span style="font-size:11px;color:var(--mu)">'+escapeHtml(e.note)+'</span>':''}${e.refCode?'<br><span style="color:var(--info);font-size:11px">Ref: '+escapeHtml(e.refCode)+'</span>':''}`;
+        const menuItems=[
+          `<button class="row-menu-item" onclick="openEditTransfer('${e.id}')"><i class="ti ti-pencil"></i> Edit</button>`,
+          e.sourceText?`<button class="row-menu-item" onclick="toggleSourceRow('${e.id}')"><i class="ti ti-message"></i> View SMS</button>`:'',
+          `<button class="row-menu-item danger" onclick="deleteTransfer('${e.id}')"><i class="ti ti-trash"></i> Delete</button>`
+        ].filter(Boolean).join('');
+        rows.push(`<tr data-row-id="${e.id}">
+          ${cbCell}
+          <td style="white-space:nowrap">${fmtDate(e.date)}</td>
+          <td>${dayCell}</td>
+          <td><span style="color:var(--mu2);font-weight:600">⇄</span></td>
+          <td class="cat-badge"><span style="background:#e8f0fb;color:var(--info)">Transfer</span></td>
+          <td>${descCell}</td>
+          <td class="pay-method">${escapeHtml(e.fromMethod||'')}</td>
+          <td class="amount" style="color:var(--mu)">${fmtNum(e.amount)}</td>
+          <td class="fee-cell">${e.txCost?fmtNum(e.txCost):'—'}</td>
+          <td class="act-btn"><div class="row-menu-wrap"><button class="row-menu-btn" onclick="toggleRowMenu(event,'menu_${e.id}')">···</button><div class="row-menu" id="menu_${e.id}">${menuItems}</div></div></td>
+        </tr>${srcRow}`);
+        continue;
+      }
+
+      const editFn=isInc?'editIncome':'editExpense';
+      let descCell=escapeHtml(e.description||'—');
+      const meta=[];
+      if(e.refCode)meta.push(`<span style="color:var(--info);font-size:11px">Ref: ${escapeHtml(e.refCode)}</span>`);
+      const chips=[];
+      if(Array.isArray(e.tags)&&e.tags.length){e.tags.forEach(t=>chips.push(`<span class="tag-chip">${escapeHtml(t)}</span>`));}
+      if(e.location){chips.push(`<span class="tag-chip legacy" title="Legacy location">${escapeHtml(e.location)}</span>`);}
+      const chipsHtml=chips.length?`<div style="margin-top:4px">${chips.join('')}</div>`:'';
+      if(meta.length||chipsHtml)descCell=(e.description?escapeHtml(e.description):'')+(meta.length?'<br>'+meta.join(' &nbsp;·&nbsp; '):'')+chipsHtml;
       const menuItems=[
-        `<button class="row-menu-item" onclick="openEditTransfer('${e.id}')"><i class="ti ti-pencil"></i> Edit</button>`,
+        `<button class="row-menu-item" onclick="${editFn}('${e.id}')"><i class="ti ti-pencil"></i> Edit</button>`,
         e.sourceText?`<button class="row-menu-item" onclick="toggleSourceRow('${e.id}')"><i class="ti ti-message"></i> View SMS</button>`:'',
-        `<button class="row-menu-item danger" onclick="deleteTransfer('${e.id}')"><i class="ti ti-trash"></i> Delete</button>`
+        e.photoId?`<button class="row-menu-item" onclick="openImgModal('${e.photoId}')"><i class="ti ti-photo"></i> View Receipt</button>`:'',
+        `<button class="row-menu-item danger" onclick="deleteTransaction('${e.id}','${e._type||e.type}')"><i class="ti ti-trash"></i> Delete</button>`
       ].filter(Boolean).join('');
-      return `<tr data-row-id="${e.id}">
+      rows.push(`<tr data-row-id="${e.id}">
         ${cbCell}
         <td style="white-space:nowrap">${fmtDate(e.date)}</td>
-        <td>${(()=>{const _d=new Date((e.date||'')+'T00:00:00');return isNaN(_d)?'—':_d.toLocaleDateString('en-KE',{weekday:'short'});})()}</td>
-        <td><span style="color:var(--mu2);font-weight:600">⇄</span></td>
-        <td class="cat-badge"><span style="background:#e8f0fb;color:var(--info)">Transfer</span></td>
+        <td>${dayCell}</td>
+        <td>${isInc?'<span style="color:var(--ok);font-weight:700">In</span>':'<span style="color:var(--danger);font-weight:700">Out</span>'}</td>
+        <td class="cat-badge${isInc?' income':''}"><span>${escapeHtml(e.category||'')}</span></td>
         <td>${descCell}</td>
-        <td class="pay-method">${escapeHtml(e.fromMethod)}</td>
-        <td class="amount" style="color:var(--mu)">${fmtNum(e.amount)}</td>
-        <td class="fee-cell">${e.txCost?fmtNum(e.txCost):'—'}</td>
+        <td class="pay-method" style="max-width:110px;white-space:normal;font-size:11px">${escapeHtml(e.paymentMethod||'—')}</td>
+        <td class="amount" style="color:${isInc?'var(--ok)':'var(--ink)'}">${isInc?'+':''}${fmtNum(e.amount)}</td>
+        <td class="fee-cell">${isInc?'—':(e.txCost?fmtNum(e.txCost):'—')}</td>
         <td class="act-btn"><div class="row-menu-wrap"><button class="row-menu-btn" onclick="toggleRowMenu(event,'menu_${e.id}')">···</button><div class="row-menu" id="menu_${e.id}">${menuItems}</div></div></td>
-      </tr>${e.sourceText?`<tr id="src_${e.id}" style="display:none"><td colspan="${colSpan}" class="source-row">${escapeHtml(e.sourceText)}</td></tr>`:''}`;
+      </tr>${srcRow}`);
+    }catch(err){
+      console.error('renderHistory row error for entry',e?.id,err);
+      rows.push(`<tr><td colspan="${colSpan}" style="color:var(--danger);font-size:11px;padding:6px 10px">⚠ Error rendering entry ${escapeHtml(e?.id||'?')}: ${escapeHtml(String(err))}</td></tr>`);
     }
-
-    const editFn=isInc?'editIncome':'editExpense';
-    let descCell=escapeHtml(e.description||'—');
-    const meta=[];
-    if(e.refCode)meta.push(`<span style="color:var(--info);font-size:11px">Ref: ${escapeHtml(e.refCode)}</span>`);
-    const chips=[];
-    if(Array.isArray(e.tags)&&e.tags.length){e.tags.forEach(t=>chips.push(`<span class="tag-chip">${escapeHtml(t)}</span>`));}
-    if(e.location){chips.push(`<span class="tag-chip legacy" title="Legacy location">${escapeHtml(e.location)}</span>`);}
-    const chipsHtml=chips.length?`<div style="margin-top:4px">${chips.join('')}</div>`:'';
-    if(meta.length||chipsHtml)descCell=(e.description?escapeHtml(e.description):'')+(meta.length?'<br>'+meta.join(' &nbsp;·&nbsp; '):'')+chipsHtml;
-    const cbCell=massDeleteActive?`<td style="width:32px"><input type="checkbox" class="mass-cb row-cb" data-id="${e.id}" onchange="updateMassBar()"/></td>`:'';
-    const colSpan=massDeleteActive?10:9;
-    const menuItems=[
-      `<button class="row-menu-item" onclick="${editFn}('${e.id}')"><i class="ti ti-pencil"></i> Edit</button>`,
-      e.sourceText?`<button class="row-menu-item" onclick="toggleSourceRow('${e.id}')"><i class="ti ti-message"></i> View SMS</button>`:'',
-      e.photoId?`<button class="row-menu-item" onclick="openImgModal('${e.photoId}')"><i class="ti ti-photo"></i> View Receipt</button>`:'',
-      `<button class="row-menu-item danger" onclick="deleteTransaction('${e.id}','${e.type}')"><i class="ti ti-trash"></i> Delete</button>`
-    ].filter(Boolean).join('');
-    return `<tr data-row-id="${e.id}">
-      ${cbCell}
-      <td style="white-space:nowrap">${fmtDate(e.date)}</td>
-      <td>${(()=>{const _d=new Date((e.date||'')+'T00:00:00');return isNaN(_d)?'—':_d.toLocaleDateString('en-KE',{weekday:'short'});})()}</td>
-      <td>${isInc?'<span style="color:var(--ok);font-weight:700">In</span>':'<span style="color:var(--danger);font-weight:700">Out</span>'}</td>
-      <td class="cat-badge ${isInc?'income':''}"><span>${escapeHtml(e.category)}</span></td>
-      <td>${descCell}</td>
-      <td class="pay-method" style="max-width:110px;white-space:normal;font-size:11px">${escapeHtml(e.paymentMethod||'—')}</td>
-      <td class="amount" style="color:${isInc?'var(--ok)':'var(--ink)'}">${isInc?'+':''}${fmtNum(e.amount)}</td>
-      <td class="fee-cell">${isInc?'—':(e.txCost?fmtNum(e.txCost):'—')}</td>
-      <td class="act-btn"><div class="row-menu-wrap"><button class="row-menu-btn" onclick="toggleRowMenu(event,'menu_${e.id}')">···</button><div class="row-menu" id="menu_${e.id}">${menuItems}</div></div></td>
-    </tr>${e.sourceText?`<tr id="src_${e.id}" style="display:none"><td colspan="${colSpan}" class="source-row">${escapeHtml(e.sourceText)}</td></tr>`:''}`;
-  }).join('');
+  }
+  tbody.innerHTML=rows.join('');
 }
 
 function populateFilterCats(){
