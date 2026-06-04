@@ -3957,11 +3957,20 @@ async function deleteTransfer(id){
 }
 
 // Register service worker for PWA / offline
+// On load: check for update immediately so stale caches don't serve broken pages
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('./sw.js').then(reg=>{
       console.log('SW registered',reg.scope);
+      // Force check for updates on every page load
+      reg.update();
     }).catch(err=>console.warn('SW failed',err));
+
+    // If a new SW is waiting, activate it immediately
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      console.log('SW updated — reloading for fresh cache');
+      window.location.reload();
+    });
   });
 }
 </script>
