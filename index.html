@@ -1925,6 +1925,8 @@ function renderAccounts(){
   const opts=state.paymentMethods.map(m=>`<option value="${escapeAttr(m)}">${escapeHtml(m)}${acctCurrency(m)!=='KES'?' ('+acctCurrency(m)+')':''}</option>`).join('');
   ['txfrFrom','txfrTo'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
 }
+
+function computeBalances(){
   const result={};
   for(const m of state.paymentMethods){
     result[m]=parseFloat(state.openingBalances[m])||0;
@@ -2976,7 +2978,7 @@ function renderDrafts(){
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
           <div class="form-group"><label>Income Category</label>
             <select id="dr_${d.id}_incCat">
-              ${flattenCats(state.incomeCats).map(x=>`<option value="${escapeAttr(x.cat)}"${x.cat===suggestIncomeCat(d)?(' selected="selected"':'').trim():''} >${escapeHtml(x.cat)}</option>`).join('')}
+              ${flattenCats(state.incomeCats).map(x=>`<option value="${escapeAttr(x.cat)}"${x.cat===suggestIncomeCat(d)?' selected':''}>${escapeHtml(x.cat)}</option>`).join('')}
             </select>
           </div>
           <div class="form-group"><label>Payment Method</label>
@@ -3061,6 +3063,8 @@ async function markBillPaidFromDraft(billId,draftId){
   await saveData(false);refreshAll();
   showToast(`${b.name} marked paid — expense logged`,"success");
 }
+
+function toggleDraftIncomePanel(id){
   const panel=document.getElementById('dr_'+id+'_incPanel');
   if(panel)panel.classList.toggle('open');
 }
